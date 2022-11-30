@@ -7,7 +7,7 @@ class Image {
         Image(unsigned int width, unsigned int height);
         std::tuple<unsigned int, unsigned int, unsigned int> getPixel(unsigned int row, unsigned int col);
         void setPixel(unsigned int row, unsigned int col, std::tuple<unsigned int, unsigned int, unsigned int> val);
-        void toPPM();
+        void toPPM(std::string file_name);
         ~Image();
     private:
         std::tuple<unsigned int, unsigned int, unsigned int>* image_;
