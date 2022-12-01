@@ -3,11 +3,10 @@
 #include <fstream>
 
 Image::Image(unsigned int width, unsigned int height) : width_(width), height_(height) {
-    image_ = new std::tuple<unsigned int, unsigned int, unsigned int>[width_ * height_]; // may have to set all to 0
+    image_ = new std::tuple<unsigned int, unsigned int, unsigned int>[width_ * height_];
 }
 
 std::tuple<unsigned int, unsigned int, unsigned int> Image::getPixel(unsigned int row, unsigned int col) {
-    // TODO memory check
     return image_[row + col * row];
 }
 
