@@ -11,6 +11,7 @@
 class RoadGraph {
     public:
         RoadGraph();
+        RoadGraph(bool flag);
         RoadGraph(const std::string& filename);
         RoadGraph(const std::string& filename1, const std::string& filename2, const std::string& filename3);
         RoadNode& insertNode();
@@ -37,6 +38,9 @@ class RoadGraph {
         RoadNode& addCrashNoRecalc(double xPos, double yPos, double numCrashes);
         RoadEdge& recalculateProb(RoadEdge& edge);
         RoadEdge& recalculateProb(RoadEdge* edge);
+        std::pair<std::map<RoadNode*, double>, std::map<RoadNode*, RoadNode*>> PrimMST(Point p);
+        std::vector<RoadNode*> DijkstraSSSP(Point p, Point q);
+        void RoadGraph::BFS();
         bool recalculateProbAll();
     private:
         std::vector<RoadNode> nodes_;
