@@ -29,4 +29,10 @@ class RoadNode {
             std::string yPos = argPos.substr(loc+1,argPos.size()-loc-2);
             pos = Point(std::stod(xPos), std::stod(yPos));
         }
+        bool operator==(const RoadNode& r) const {
+            return pos.x == r.pos.x && pos.y == r.pos.y;
+        };
+        bool operator!=(const RoadNode& r) const {
+            return !(*this == r);
+        };
 };
