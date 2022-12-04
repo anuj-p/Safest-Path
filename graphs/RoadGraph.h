@@ -44,7 +44,7 @@ class RoadGraph {
         std::vector<RoadNode*> BFS(Point p1, Point p2);
         std::vector<RoadNode*> BFS(RoadNode* node1, RoadNode* node2);
         std::vector<RoadNode*> getNeighbors(RoadNode* node);
-    private:
+    // private:
         std::vector<RoadNode> nodes_;
         std::vector<RoadNode::RoadEdge> edges_;
         KDTree tree_;

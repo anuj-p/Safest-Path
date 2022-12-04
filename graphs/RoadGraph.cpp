@@ -197,56 +197,71 @@ bool RoadGraph::recalculateProbAll() {
     return true;
 }
 
-std::vector<RoadNode*> RoadGraph::BFS(Point p1, Point p2){
-    return BFS(tree_.findNearestNeighbor(p1).node, tree_.findNearestNeighbor(p2).node);
+std::vector<std::size_t> RoadGraph::BFS(Point p1, Point p2){
+    return BFS(tree_.findNearestNeighbor(p1).node.id, tree_.findNearestNeighbor(p2).node.id);
+    return {};
 }
 
-std::vector<RoadNode*> RoadGraph::BFS(RoadNode* node1, RoadNode* node2){
-    if (node1->id == node2->id) {
-        return {node1};
+std::vector<std::size_t> RoadGraph::BFS(size_t id1, size_t id2){   
+    if (id1 == id2) {
+        return {id1};
     }
-    std::queue<RoadNode*> q;
+    std::queue<std::size_t> q;
     std::set<std::size_t> visited;
-    std::map<RoadNode*, RoadNode*> prev_map;
+    std::map<std::size_t, std::size_t> prev_map;
     bool isConnected = false;
-    q.push(node1);
-    visited.insert(node1->id);
+    q.push(id1);
+    visited.insert(id1);
+    // std::cout << "node1 id: ";
+    //     for (size_t t : visited) {
+    //         std::cout << t << " ";
+    //     }
+    // std::cout<< std::endl;
+    // std::cout << "got here hello?" << std::endl;
     while (!q.empty()) {
-        RoadNode* temp = q.front();
+
+        // std::cout << "visited node ids: ";
+        // for (size_t t : visited) {
+        //     std::cout << t << " ";
+        // }
+        // std::cout<< std::endl;
+
+        std::size_t temp = q.front();
         q.pop();
-        for (RoadNode* n : getNeighbors(temp)) {
-            if (visited.find(n->id) == visited.end()) {
-                if (n->id == node2->id) {
-                    prev_map.insert({node2,temp});
-                    visited.insert(n->id);
+        std::cout << "got here hello?" << std::endl;
+        for (auto n : getNeighbors(nodes_[temp])) {
+            if (visited.find(n) == visited.end()) {
+                if (n == id2) {
+                    prev_map.insert({id2,temp});
+                    visited.insert(n);
                     isConnected = true;
                     break;
                 } else {
                     q.push(n);
-                    visited.insert(n->id);
+                    visited.insert(n);
                     prev_map.insert({n, temp});
                 } 
             }
         }
     }
     if (isConnected) {
-        std::vector<RoadNode*> to_return;
-        RoadNode* temp = node2;
-        while (temp != node1) {
+        std::vector<std::size_t> to_return;
+        std::size_t temp = id2;
+        while (temp != id1) {
             to_return.push_back(temp);
             temp = prev_map.at(temp);
         }
-        to_return.push_back(node1);
+        to_return.push_back(id1);
         std::reverse(to_return.begin(), to_return.end());
         return to_return;
     }
     return {};
 }
 
-std::vector<RoadNode*> RoadGraph::getNeighbors(RoadNode* node){
-    std::vector<RoadNode*> to_return;
-    for (const auto* edge : node->edges) {
-        if (edge->start->id == node->id) {
+std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id){
+    std::vector<std::size_t> to_return;
+    for (const auto* edge : nodes_[id]->edges) {
+        if (edge->start->id == id) {
             to_return.push_back(edge->end);
         } else {
             to_return.push_back(edge->start);

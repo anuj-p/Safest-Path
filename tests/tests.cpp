@@ -21,28 +21,60 @@ void ImageTests() {
     image.toPPM("tests/test_image_1.ppm");
 }
 
-int main() {
-    std::cout << "=======================" << std::endl;
-    std::cout << "Starting Image tests..." << std::endl;
-    ImageTests();
-    std::cout << "Completed Image tests." << std::endl;
-    std::cout << "=======================" << std::endl;
-    return 0;
-}
-
 void GraphTests() {
     RoadGraph rg(false);
     auto &r1 = rg.insertNode(1,0);
     auto &r2 = rg.insertNode(1,5);
-    auto & r3 = rg.insertNode(0,7);
+    auto &r3 = rg.insertNode(0,7);
     auto &r4 = rg.insertNode(3,8.5);
-    auto & r5 = rg.insertNode(2,10);
-    auto & r6 = rg.insertNode(5,10);
+    auto &r5 = rg.insertNode(2,10);
+    auto &r6 = rg.insertNode(5,10);
     auto &r7 = rg.insertNode(4.5, 5);
     auto &r8 = rg.insertNode(5.3,0);
-    auto & r9 = rg.insertNode(10,10);
-    auto shortestPath1To9 = rg.BFS(&r1, &r9);
-    for (const auto* n : shortestPath1To9) {
-        std::cout << "(" << n->pos.x << " " << n->pos.y << ")" << std::endl;
+    auto &r9 = rg.insertNode(10,10);
+
+
+
+    rg.insertEdge(r1,r2);
+    rg.insertEdge(r2,r3);
+    rg.insertEdge(r3,r4);
+    rg.insertEdge(r4,r5);
+    rg.insertEdge(r5,r6);
+    rg.insertEdge(r6,r7);
+    rg.insertEdge(r7,r8);
+    rg.insertEdge(r8,r9);
+    rg.insertEdge(r1,r8);
+    rg.insertEdge(r1,r7);
+    rg.insertEdge(r2,r7);
+    rg.insertEdge(r3,r7);
+    rg.insertEdge(r4,r7);
+    rg.insertEdge(r4,r6);
+
+    for (auto rn : rg.nodes_) {
+        std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id  << " " << &rn << std::endl;
+
     }
+
+    std::cout << r1.id << std::endl;
+
+    auto shortestPath1To9 = rg.BFS(&rg.nodes_[0], &rg.nodes_[8]);
+    
+    for (auto rn : rg.nodes_) {
+        std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id << std::endl;
+
+    }
+
+    for (const auto* n : shortestPath1To9) {
+        std::cout << "(" << n->pos.x << " " << n->pos.y << " " << n->id << ")" << std::endl;
+    }
+}
+
+int main() {
+    std::cout << "=======================" << std::endl;
+    std::cout << "Starting Image tests..." << std::endl;
+    //ImageTests();
+    GraphTests();
+    std::cout << "Completed Image tests." << std::endl;
+    std::cout << "=======================" << std::endl;
+    return 0;
 }

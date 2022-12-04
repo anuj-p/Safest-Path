@@ -24,7 +24,7 @@ class RoadNode {
     public:
         class RoadEdge {
             public:
-                std::size_t id;
+                int32_t id;
                 RoadNode* start;
                 RoadNode* end;
                 double crashProb;
@@ -39,7 +39,7 @@ class RoadNode {
                 RoadEdge(std::size_t argId, RoadNode* argStart, RoadNode* argEnd, double argCrashProb, double argLength);
                 RoadEdge(std::size_t argId, RoadNode* argStart, RoadNode* argEnd, double argLength);
         };
-        std::size_t id;
+        int32_t id;
         Point pos;
         std::vector<RoadEdge*> edges;
         std::string name;
