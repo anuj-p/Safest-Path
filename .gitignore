@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Custom
+*.json
+*.geojson
+*.png
+*.ppm
