@@ -7,6 +7,7 @@
 #include <iostream>
 #include <map>
 #include <queue>
+#include <set>
 #include <algorithm>
 
 RoadGraph::RoadGraph(bool flag) : nodes_(), edges_(), tree_() {}
@@ -34,6 +35,7 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
             prev = cur;
         }   
     }
+
     tree_ = KDTree(nodes_);
     std::list<Reader::TrafficEntry> traffEntries = r.getTrafficEntries();
     for (const Reader::TrafficEntry& entry : traffEntries) {
@@ -193,6 +195,64 @@ bool RoadGraph::recalculateProbAll() {
         recalculateProb(edge);
     }
     return true;
+}
+
+std::vector<RoadNode*> RoadGraph::BFS(Point p1, Point p2){
+    return BFS(findNearestNeighbor(p1), findNearestNeighbor(p2));
+}
+
+std::vector<RoadNode*> RoadGraph::BFS(RoadNode* node1, RoadNode* node2){
+    if (*node1 == *node2) {
+        return {node1};
+    }
+    std::queue<RoadNode*> q;
+    std::set<RoadNode*> visited;
+    std::map<RoadNode*, RoadNode*> prev_map;
+    bool isConnected = false;
+    q.push(node1);
+    visited.insert(node1);
+    while (!q.empty()) {
+        RoadNode* temp = q.front();
+        q.pop();
+        for (const auto* n : getNeighbors(temp)) {
+            if (visited.find(n) == visited.end()) (
+                if (*n == *node2) {
+                    prev_map.insert({node2,temp});
+                    visited.insert(n);
+                    isConnected = true;
+                    break;
+                } else {
+                    q.push(n);
+                    visited.insert(n);
+                    prev_map.insert({n, temp});
+                } 
+            )
+        }
+    }
+    if (isConnected) {
+        std::vector<RoadNode*> to_return;
+        RoadNode* temp = node2;
+        while (temp != node1) {
+            to_return.push_back(temp);
+            temp = prev_map.at(temp);
+        }
+        to_return.push_back(node1);
+        std::reverse(to_return);
+        return to_return;
+    }
+    return {};
+}
+
+std::vector<RoadNode*> RoadGraph::getNeighbors(RoadNode* node){
+    std::vector<RoadNode*> to_return;
+    for (const auto* edge : node->edges) {
+        if (*(edge->start) == *node) {
+            to_return.push_back(edge->end);
+        } else {
+            to_return.push_back(edge->start);
+        }
+    }
+    return to_return;
 }
 
 // RoadGraph* RoadGraph::PrimMST(Point p) {

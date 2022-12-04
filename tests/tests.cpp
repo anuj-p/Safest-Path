@@ -1,4 +1,5 @@
 #include "../visuals/image.h"
+#include "../graphs/RoadGraph.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -27,4 +28,21 @@ int main() {
     std::cout << "Completed Image tests." << std::endl;
     std::cout << "=======================" << std::endl;
     return 0;
+}
+
+void GraphTests() {
+    RoadGraph rg(false);
+    auto &r1 = rg.insertNode(1,0);
+    auto &r2 = rg.insertNode(1,5);
+    auto & r3 = rg.insertNode(0,7);
+    auto &r4 = rg.insertNode(3,8.5);
+    auto & r5 = rg.insertNode(2,10);
+    auto & r6 = rg.insertNode(5,10);
+    auto &r7 = rg.insertNode(4.5, 5);
+    auto &r8 = rg.insertNode(5.3,0);
+    auto & r9 = rg.insertNode(10,10);
+    auto shortestPath1To9 = rg.BFS(&r1, &r9);
+    for (const auto* n : shortestPath1To9) {
+        std::cout << "(" << n->pos.x << " " << n->pos.y << ")" << std::endl;
+    }
 }
