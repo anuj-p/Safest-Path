@@ -1,33 +1,35 @@
+#include "../data/reader.h"
 #include "../visuals/image.h"
 
 #include <iostream>
 #include <stdexcept>
+#include <list>
 
 void ImageTests() {
-    std::cout << "-> [Test 1]" << std::endl;
+    std::cout << "-> [Test Image Initilization]" << std::endl;
     Image image = Image(50, 50);
     std::tuple<unsigned int, unsigned int, unsigned int> pixel = image.getPixel(49, 49);
-    if (std::get<0>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
-    if (std::get<1>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
-    if (std::get<2>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
+    if (std::get<0>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
+    if (std::get<1>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
+    if (std::get<2>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
 
-    image.setPixel(49, 49, {255, 255, 255});
+    image.setPixel(49, 49, {0, 0, 0});
     pixel = image.getPixel(49, 49);
-    if (std::get<0>(pixel) != 255) throw std::runtime_error("Invalid pixel manipulation.");
-    if (std::get<1>(pixel) != 255) throw std::runtime_error("Invalid pixel manipulation.");
-    if (std::get<2>(pixel) != 255) throw std::runtime_error("Invalid pixel manipulation.");
+    if (std::get<0>(pixel) != 0) throw std::runtime_error("Invalid pixel manipulation.");
+    if (std::get<1>(pixel) != 0) throw std::runtime_error("Invalid pixel manipulation.");
+    if (std::get<2>(pixel) != 0) throw std::runtime_error("Invalid pixel manipulation.");
 
     image.toPPM("tests/test_image_1.ppm");
 
-    std::cout << "-> [Test 2]" << std::endl;
+    std::cout << "-> [Test Large/Dynamic Image]" << std::endl;
 
-    Image image2 = Image(50,50);
+    Image image2 = Image(50, 50);
     for (int i = 0; i < 50; ++i) {
         for (int j = 0; j < 50; ++j) {
             std::tuple<unsigned int, unsigned int, unsigned int> pixel = image2.getPixel(i, j);
-            if (std::get<0>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
-            if (std::get<1>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
-            if (std::get<2>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
+            if (std::get<0>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
+            if (std::get<1>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
+            if (std::get<2>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
         }
     }
 
@@ -47,19 +49,19 @@ void ImageTests() {
     }
     image2.toPPM("tests/test_image_2.ppm");
 
-    std::cout << "-> [Test 3]" << std::endl;
+    std::cout << "-> [Test Small Image]" << std::endl;
 
     Image image3 = Image(1,1);
     pixel = image3.getPixel(0, 0);
-    if (std::get<0>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
-    if (std::get<1>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
-    if (std::get<2>(pixel) != 0) throw std::runtime_error("Invalid image initialization.");
+    if (std::get<0>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
+    if (std::get<1>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
+    if (std::get<2>(pixel) != 255) throw std::runtime_error("Invalid image initialization.");
 
-    image3.setPixel(0, 0, {255, 255, 255});
+    image3.setPixel(0, 0, {0, 0, 0});
     pixel = image3.getPixel(0, 0);
-    if (std::get<0>(pixel) != 255) throw std::runtime_error("Invalid pixel manipulation.");
-    if (std::get<1>(pixel) != 255) throw std::runtime_error("Invalid pixel manipulation.");
-    if (std::get<2>(pixel) != 255) throw std::runtime_error("Invalid pixel manipulation.");
+    if (std::get<0>(pixel) != 0) throw std::runtime_error("Invalid pixel manipulation.");
+    if (std::get<1>(pixel) != 0) throw std::runtime_error("Invalid pixel manipulation.");
+    if (std::get<2>(pixel) != 0) throw std::runtime_error("Invalid pixel manipulation.");
 
     image3.toPPM("tests/test_image_3.ppm");
 
@@ -67,8 +69,7 @@ void ImageTests() {
 
 void ReaderTests() {
     std::cout << "-> [Testing getRoadEntries()]" << std::endl;
-    Reader r;
-    std::list<Reader::RoadEntry> roadEntryList = r.getRoadEntries();
+    std::list<Reader::RoadEntry> roadEntryList = Reader::getRoadEntries();
     int roadEntryCounter = 0;
     for (const auto & roadEntryInstance : roadEntryList) {
         if (roadEntryCounter == 0) {
@@ -137,7 +138,7 @@ void ReaderTests() {
 
     
     std::cout << "-> [Testing getTrafficEntries()]" << std::endl;
-    std::list<Reader::TrafficEntry> trafficEntryList = r.getTrafficEntries();
+    std::list<Reader::TrafficEntry> trafficEntryList = Reader::getTrafficEntries();
     int trafficEntryCounter = 0;
     for (const auto & trafficEntryInstance : trafficEntryList) {
         if (trafficEntryCounter == 0) {
@@ -204,27 +205,24 @@ void ReaderTests() {
 
     
     std::cout << "-> [Testing getCrashEntries()]" << std::endl;
-    std::list<Reader::CrashEntry> crashEntryList = r.getCrashEntries();
+    std::list<Reader::CrashEntry> crashEntryList = Reader::getCrashEntries();
     int crashEntryCounter = 0;
     for (const auto & crashEntryInstance : crashEntryList) {
         if (crashEntryCounter == 0) {
-            std::cout << "1" << std::endl;
             if (crashEntryInstance.vehicles != 2) throw std::runtime_error("Incorrect vehicles");
-            if (crashEntryInstance.coordinates.first != 41.7581 || crashEntryInstance.coordinates.second != -89.4134) throw std::runtime_error("Incorrect coordinates");
+            if (crashEntryInstance.coordinates.second != 41.7581 || crashEntryInstance.coordinates.first != -89.4134) throw std::runtime_error("Incorrect coordinates");
         }
         if (crashEntryCounter == 6) {
-            std::cout << "2" << std::endl;
             if (crashEntryInstance.vehicles != 3) throw std::runtime_error("Incorrect vehicles");
-            if (crashEntryInstance.coordinates.first != 41.80927379 || crashEntryInstance.coordinates.second != -87.61662205) throw std::runtime_error("Incorrect coordinates");
+            if (crashEntryInstance.coordinates.second != 41.80927379 || crashEntryInstance.coordinates.first != -87.61662205) throw std::runtime_error("Incorrect coordinates");
             break;
         }
         ++crashEntryCounter;
     }
 
     Reader::CrashEntry crashEntryInstance = crashEntryList.back();
-    std::cout << "3" << std::endl;
     if (crashEntryInstance.vehicles != 2) throw std::runtime_error("Incorrect vehicles");
-    if (crashEntryInstance.coordinates.first != 41.75000067 || crashEntryInstance.coordinates.second != -87.70225383) throw std::runtime_error("Incorrect coordinates");
+    if (crashEntryInstance.coordinates.second != 41.75000067 || crashEntryInstance.coordinates.first != -87.70225383) throw std::runtime_error("Incorrect coordinates");
 
 }
 
