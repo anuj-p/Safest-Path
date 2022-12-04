@@ -8,6 +8,9 @@
 #include <map>
 #include <queue>
 #include <set>
+#include <algorithm>
+
+RoadGraph::RoadGraph(bool flag) : nodes_(), edges_(), tree_() {}
 
 RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
     Reader r;
@@ -264,3 +267,56 @@ std::vector<RoadNode*> RoadGraph::getNeighbors(RoadNode* node){
 //     return PrimMST(node.)
 // }
 
+std::pair<std::map<RoadNode*, double>, std::map<RoadNode*, RoadNode*>> RoadGraph::PrimMST(Point p) {
+    RoadNode* start = tree_.findNearestNeighbor(p).node;
+    std::map<RoadNode*, double> dist;
+    std::map<RoadNode*, RoadNode*> prev;
+    for (RoadNode& n : nodes_) {
+        dist.insert({&n, 2.0});
+        prev.insert({&n, nullptr});
+    }
+    dist[start] = 0;
+
+    std::priority_queue<std::pair<double, RoadNode*>> q;
+    for (RoadNode& n : nodes_) {
+        q.push({dist[&n], &n});
+    }
+    std::list<RoadNode*> list;
+
+    for (int i = 0; i < nodes_.size(); ++i) {
+        RoadNode* m = q.top().second;
+        list.push_back(m);
+        for (RoadEdge* edge : m->edges) {
+            RoadNode* v = m == edge->end ? edge->start : edge->end;
+            if (std::find(list.begin(), list.end(), v) == list.end()) {
+                if (1 - (1 - edge->crashProb)*(1 - dist[m]) < dist[v]) {
+                    dist[v] = 1 - (1 - edge->crashProb)*(1 - dist[m]);
+                    prev[v] = m;
+                }
+            }
+        }
+    }
+    return std::make_pair(dist, prev);
+}
+
+std::vector<RoadNode*> RoadGraph::DijkstraSSSP(Point p, Point q) {
+    RoadNode* start = tree_.findNearestNeighbor(p).node;
+    RoadNode* end = tree_.findNearestNeighbor(q).node;
+    std::list<RoadNode*> list;
+    std::map<RoadNode*, RoadNode*> prev = PrimMST(p).second;
+    for (RoadNode* n = end; n != nullptr; n = prev[n]) {
+        list.push_front(n);
+    }
+    std::vector<RoadNode*> vec;
+    for (RoadNode* n : list) {
+        vec.push_back(n);
+    }
+    return vec;
+}
+
+// void RoadGraph::BFS(Point p) {
+//     RoadNode* start = tree_.findNearestNeighbor(p).node;
+//     std::map<RoadNode*, bool> visited;
+//     std::map<RoadEdge*, unsigned byte> 
+//     std::queue<>
+// }
