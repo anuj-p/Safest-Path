@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Point.h"
-#include "RoadNode.h"
-#include "RoadGraph.h"
-#include "reader.h"
+#include "utils.h"
 
 #include <queue>
 
