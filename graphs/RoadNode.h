@@ -9,7 +9,7 @@ class RoadNode {
     public:
         std::size_t id;
         Point pos;
-        std::vector<RoadEdge*> edges;
+        std::vector<RoadEdge::RoadEdge*> edges;
         std::string name;
         RoadNode() : id(0), pos(Point()), edges(), name("") {}
         RoadNode(Point argPos) : id(0), pos(argPos), edges(), name("") {}
