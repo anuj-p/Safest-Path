@@ -56,11 +56,6 @@ void GraphTests() {
         std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id  << " " << &rn << std::endl;
     }
 
-    // std::size_t id4 = rg.tree_.findNearestNeighbor(rg.nodes_[r4].pos).id;
-    // std::size_t id7 = rg.tree_.findNearestNeighbor(rg.nodes_[r7].pos).node;
-
-    // std::cout << "id4: " << id4 << "id7: " << id7 << std::endl;
-
     auto shortestPath4To7 = rg.DijkstraSSSP(r4, r7);
     auto shortestPath1To5 = rg.BFS(r1, r5);
     std::map<std::size_t, std::vector<std::size_t>> graphFrom1 = rg.BFS(r1);
@@ -69,6 +64,11 @@ void GraphTests() {
         std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id << std::endl;
 
     }
+
+    std::cout << "KDTree findNearestNeighbor accuracy test: " << std::endl;
+    std::size_t id4 = rg.tree_.findNearestNeighbor(rg.nodes_[r4].pos).id;
+    std::size_t id7 = rg.tree_.findNearestNeighbor(rg.nodes_[r7].pos).node;
+    std::cout << "id4: " << id4 << "id7: " << id7 << std::endl;
 
     std::cout << "BFS shortest unweighted path test: " << std::endl;
     for (auto n : shortestPath1To5) {
