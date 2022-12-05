@@ -185,7 +185,7 @@ std::vector<std::size_t> RoadGraph::BFS(std::size_t id1, std::size_t id2){
 
         std::size_t temp = q.front();
         q.pop();
-        std::cout << "got here hello?" << std::endl;
+        // std::cout << "got here hello?" << std::endl;
         for (std::size_t n : getNeighbors(nodes_[temp].id)) {
             if (visited.find(n) == visited.end()) {
                 if (n == id2) {
@@ -218,12 +218,17 @@ std::vector<std::size_t> RoadGraph::BFS(std::size_t id1, std::size_t id2){
 std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id){
     std::vector<std::size_t> to_return;
     for (std::size_t edge : nodes_[id].edges) {
-        if (nodes_[edges_[edge].start].id == id) {
-            to_return.push_back(edges_[id].end);
+        if (edges_[edge].start == id) {
+            to_return.push_back(edges_[edge].end);
         } else {
-            to_return.push_back(edges_[id].start);
+            to_return.push_back(edges_[edge].start);
         }
     }
+    std::cout << "neighbors of node #" << id << ": ";
+    for (std::size_t t : to_return) {
+        std::cout << t << " ";
+    }
+    std::cout<<std::endl;
     return to_return;
 }
 

@@ -33,7 +33,7 @@ class RoadGraph {
         std::map<std::size_t, std::vector<std::size_t>> BFS(Point p);
         std::vector<std::size_t> getNeighbors(std::size_t id);
 
-    private:
+    // private:
         std::vector<RoadNode> nodes_;
         std::vector<RoadNode::RoadEdge> edges_;
         KDTree tree_;
