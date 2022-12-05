@@ -63,6 +63,7 @@ void GraphTests() {
 
     auto shortestPath4To7 = rg.DijkstraSSSP(r4, r7);
     auto shortestPath1To5 = rg.BFS(r1, r5);
+    std::map<std::size_t, std::vector<std::size_t>> graphFrom1 = rg.BFS(r1);
     
     for (auto rn : rg.nodes_) {
         std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id << std::endl;
@@ -80,6 +81,15 @@ void GraphTests() {
         std::cout << " (" << n << ") ";
     }
     std::cout << std::endl;
+
+    std::cout << "BFS Graph generator test: " << std::endl;
+    for (const auto& n : graphFrom1) {
+        std::cout << "node " << n.first << "'s children: ";
+        for (std::size_t t : n.second) {
+            std::cout << " (" << t << ") ";
+        }
+        std::cout<<std::endl;
+    }
 }
 
 int main() {
