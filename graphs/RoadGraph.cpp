@@ -14,45 +14,44 @@ RoadGraph::RoadGraph(bool flag) : nodes_(), edges_(), tree_() {}
 
 RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
     Reader r;
-    std::map<Point, RoadNode*> nodes;
+    std::map<Point, std::size_t> nodes;
     std::list<Reader::RoadEntry> roadEntries = r.getRoadEntries();
     for (const Reader::RoadEntry& entry : roadEntries) {
-        RoadNode* prev = nullptr;
+        std::size_t prev = UINT32_MAX;
         std::size_t coordListSize = entry.coordinates_list.size();
         double length = entry.length/(coordListSize - 1);
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
-            RoadNode* cur = nullptr;
+            std::size_t cur = UINT32_MAX;
             Point p(pair);
             if (nodes.find(p) == nodes.end()) {
-                cur = &insertNode(p, entry.name);
+                cur = insertNode(p, entry.name);
                 nodes.insert({p, cur});
             } else {
                 cur = nodes[p];
             }
-            if (prev) {
+            if (prev != UINT32_MAX) {
                 insertEdge(prev, cur, length);
             }
             prev = cur;
         }   
     }
 
-    tree_ = KDTree(nodes_);
     std::list<Reader::TrafficEntry> traffEntries = r.getTrafficEntries();
     for (const Reader::TrafficEntry& entry : traffEntries) {
-        RoadNode* prev = nullptr;
+        std::size_t prev = UINT32_MAX;
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
             Point p(pair);
             if (nodes.find(p) == nodes.end()) {
                 continue;
             }
-            RoadNode* cur = nodes[p];
-            if (cur->name == "") {
-                cur->name = entry.road_name;
+            std::size_t cur = nodes[p];
+            if (nodes_[cur].name == "") {
+                nodes_[cur].name = entry.road_name;
             }
-            if (prev) {
-                for (RoadNode::RoadEdge* edge : prev->edges) {
-                    if (edge->start->id == cur->id || edge->end->id == cur->id) {
-                        edge->dailyDriver = static_cast<double>(entry.traffic);
+            if (prev != UINT32_MAX) {
+                for (std::size_t edge : nodes_[prev].edges) {
+                    if (nodes_[edges_[edge].start].id == cur || nodes_[edges_[edge].end].id == cur) {
+                        edges_[edge].dailyDriver = static_cast<double>(entry.traffic);
                         break;
                     }
                 }
@@ -60,6 +59,7 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
             prev = cur;
         }
     }
+    tree_ = KDTree(nodes_);
     std::list<Reader::CrashEntry> crshEntries = r.getCrashEntries();
     for (const Reader::CrashEntry& entry : crshEntries) {
         addCrashNoRecalc(Point(entry.coordinates), static_cast<double>(entry.vehicles));
@@ -67,142 +67,99 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
     recalculateProbAll();
 }
 
-RoadNode& RoadGraph::insertNode() {
+std::size_t RoadGraph::insertNode() {
     nodes_.push_back(RoadNode(nextNodeId++));
-    return nodes_[nodes_.size() - 1];
+    return nodes_.size() - 1;
 }
-RoadNode& RoadGraph::insertNode(Point pos) {
+std::size_t RoadGraph::insertNode(Point pos) {
     nodes_.push_back(RoadNode(nextNodeId++, pos));
-    return nodes_[nodes_.size() - 1];
+    return nodes_.size() - 1;
 }
-RoadNode& RoadGraph::insertNode(Point pos, std::string name) {
+std::size_t RoadGraph::insertNode(Point pos, std::string name) {
     nodes_.push_back(RoadNode(nextNodeId++, pos, name));
-    return nodes_[nodes_.size() - 1];
+    return nodes_.size() - 1;
 }
-RoadNode& RoadGraph::insertNode(double xPos, double yPos) {
+std::size_t RoadGraph::insertNode(double xPos, double yPos) {
     nodes_.push_back(RoadNode(nextNodeId++, xPos, yPos));
-    return nodes_[nodes_.size() - 1];
-}
-RoadNode& RoadGraph::insertNode(std::string pos) {
-    nodes_.push_back(RoadNode(nextNodeId++, pos));
-    return nodes_[nodes_.size() - 1];
+    return nodes_.size() - 1;
 }
 
-// RoadNode& RoadGraph::removeNode(std::size_t id);
-
-RoadNode::RoadEdge& RoadGraph::insertEdge() {
+std::size_t RoadGraph::insertEdge() {
     edges_.push_back(RoadNode::RoadEdge(nextEdgeId++));
-    return edges_[edges_.size() - 1];
+    return edges_.size() - 1;
 }
-RoadNode::RoadEdge& RoadGraph::insertEdge(std::size_t id1, std::size_t id2) {
-    RoadNode& node1 = nodes_[id1];
-    RoadNode& node2 = nodes_[id2];
-    edges_.push_back(RoadNode::RoadEdge(nextEdgeId++, node1, node2));
-    RoadNode::RoadEdge* newEdge = &edges_[edges_.size() - 1];
-    node1.edges.push_back(newEdge);
-    node2.edges.push_back(newEdge);
-    return *newEdge;
-}
-RoadNode::RoadEdge& RoadGraph::insertEdge(RoadNode& node1, RoadNode& node2) {
-    edges_.push_back(RoadNode::RoadEdge(nextEdgeId++, node1, node2));
-    RoadNode::RoadEdge* newEdge = &edges_[edges_.size() - 1];
-    node1.edges.push_back(newEdge);
-    node2.edges.push_back(newEdge);
-    return *newEdge;
-}
-RoadNode::RoadEdge& RoadGraph::insertEdge(RoadNode* node1, RoadNode* node2) {
-    edges_.push_back(RoadNode::RoadEdge(nextEdgeId++, node1, node2));
-    RoadNode::RoadEdge* newEdge = &edges_[edges_.size() - 1];
-    node1->edges.push_back(newEdge);
-    node2->edges.push_back(newEdge);
-    return *newEdge;
-}
-RoadNode::RoadEdge& RoadGraph::insertEdge(RoadNode* node1, RoadNode* node2, double length) {
+std::size_t RoadGraph::insertEdge(std::size_t node1, std::size_t node2, double length) {
     edges_.push_back(RoadNode::RoadEdge(nextEdgeId++, node1, node2, length));
-    RoadNode::RoadEdge* newEdge = &edges_[edges_.size() - 1];
-    node1->edges.push_back(newEdge);
-    node2->edges.push_back(newEdge);
-    return *newEdge;
+    nodes_[node1].edges.push_back(edges_.size() - 1);
+    nodes_[node2].edges.push_back(edges_.size() - 1);
+    return edges_.size() - 1;
 }
-
-// RoadEdge& RoadGraph::removeEdge(std::size_t id);
 
 bool RoadGraph::containsNode(std::size_t id) const {
     return id < nextNodeId;
 }
-bool RoadGraph::containsNode(const RoadNode& node) const {
-    return node.id < nextNodeId;
-}
 bool RoadGraph::containsEdge(std::size_t id) const {
     return id < nextEdgeId;
 }
-bool RoadGraph::containsEdge(const RoadNode::RoadEdge& edge) const {
-    return edge.id < nextEdgeId;
-}
 
-RoadNode& RoadGraph::addCrash(Point pos, double numCrashes) {
-    RoadNode& node = *tree_.findNearestNeighbor(pos).node;
-    numCrashes /= node.edges.size();
-    for (RoadNode::RoadEdge* edge : node.edges) {
-        edge->numCrashes += numCrashes;
+std::size_t RoadGraph::addCrash(Point pos, double numCrashes) {
+    std::size_t id = tree_.findNearestNeighbor(pos).node;
+    numCrashes /= nodes_[id].edges.size();
+    for (std::size_t edge : nodes_[id].edges) {
+        edges_[edge].numCrashes += numCrashes;
         recalculateProb(edge);
     }
-    return node;
+    return id;
 }
-RoadNode& RoadGraph::addCrash(double xPos, double yPos, double numCrashes) {
-    RoadNode& node = *tree_.findNearestNeighbor(Point(xPos, yPos)).node;
-    numCrashes /= node.edges.size();
-    for (RoadNode::RoadEdge* edge : node.edges) {
-        edge->numCrashes += numCrashes;
+std::size_t RoadGraph::addCrash(double xPos, double yPos, double numCrashes) {
+    std::size_t id = tree_.findNearestNeighbor(Point(xPos, yPos)).node;
+    numCrashes /= nodes_[id].edges.size();
+    for (std::size_t edge : nodes_[id].edges) {
+        edges_[edge].numCrashes += numCrashes;
         recalculateProb(edge);
     }
-    return node;
+    return id;
 }
 
-RoadNode& RoadGraph::addCrashNoRecalc(Point pos, double numCrashes) {
-    RoadNode& node = *tree_.findNearestNeighbor(pos).node;
-    numCrashes /= node.edges.size();
-    for (RoadNode::RoadEdge* edge : node.edges) {
-        edge->numCrashes += numCrashes;
+std::size_t RoadGraph::addCrashNoRecalc(Point pos, double numCrashes) {
+    std::size_t id = tree_.findNearestNeighbor(pos).node;
+    numCrashes /= nodes_[id].edges.size();
+    for (std::size_t edge : nodes_[id].edges) {
+        edges_[edge].numCrashes += numCrashes;
     }
-    return node;
+    return id;
 }
-RoadNode& RoadGraph::addCrashNoRecalc(double xPos, double yPos, double numCrashes) {
-    RoadNode& node = *tree_.findNearestNeighbor(Point(xPos, yPos)).node;
-    numCrashes /= node.edges.size();
-    for (RoadNode::RoadEdge* edge : node.edges) {
-        edge->numCrashes += numCrashes;
+std::size_t RoadGraph::addCrashNoRecalc(double xPos, double yPos, double numCrashes) {
+    std::size_t id = tree_.findNearestNeighbor(Point(xPos, yPos)).node;
+    numCrashes /= nodes_[id].edges.size();
+    for (std::size_t edge : nodes_[id].edges) {
+        edges_[edge].numCrashes += numCrashes;
     }
-    return node;
+    return id;
 }
 
-RoadNode::RoadEdge& RoadGraph::recalculateProb(RoadNode::RoadEdge& edge) {
+std::size_t RoadGraph::recalculateProb(std::size_t id) {
+    RoadNode::RoadEdge& edge = edges_[id];
     if (edge.dailyDriver * 365 <= edge.numCrashes) {
         edge.dailyDriver = edge.numCrashes / 365;
         edge.crashProb = 1;
-        return edge;
+        return id;
     }
     edge.crashProb = edge.numCrashes / (edge.dailyDriver * 365);
-    return edge;
+    return id;
 }
 
-RoadNode::RoadEdge& RoadGraph::recalculateProb(RoadNode::RoadEdge* edge) {
-    return recalculateProb(*edge);
-}
-
-bool RoadGraph::recalculateProbAll() {
+void RoadGraph::recalculateProbAll() {
     for (RoadNode::RoadEdge& edge : edges_) {
-        recalculateProb(edge);
+        recalculateProb(edge.id);
     }
-    return true;
 }
 
 std::vector<std::size_t> RoadGraph::BFS(Point p1, Point p2){
-    return BFS(tree_.findNearestNeighbor(p1).node.id, tree_.findNearestNeighbor(p2).node.id);
-    return {};
+    return BFS(tree_.findNearestNeighbor(p1).node, tree_.findNearestNeighbor(p2).node);
 }
 
-std::vector<std::size_t> RoadGraph::BFS(size_t id1, size_t id2){   
+std::vector<std::size_t> RoadGraph::BFS(std::size_t id1, std::size_t id2){   
     if (id1 == id2) {
         return {id1};
     }
@@ -229,7 +186,7 @@ std::vector<std::size_t> RoadGraph::BFS(size_t id1, size_t id2){
         std::size_t temp = q.front();
         q.pop();
         std::cout << "got here hello?" << std::endl;
-        for (auto n : getNeighbors(nodes_[temp])) {
+        for (std::size_t n : getNeighbors(nodes_[temp].id)) {
             if (visited.find(n) == visited.end()) {
                 if (n == id2) {
                     prev_map.insert({id2,temp});
@@ -260,52 +217,40 @@ std::vector<std::size_t> RoadGraph::BFS(size_t id1, size_t id2){
 
 std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id){
     std::vector<std::size_t> to_return;
-    for (const auto* edge : nodes_[id]->edges) {
-        if (edge->start->id == id) {
-            to_return.push_back(edge->end);
+    for (std::size_t edge : nodes_[id].edges) {
+        if (nodes_[edges_[edge].start].id == id) {
+            to_return.push_back(edges_[id].end);
         } else {
-            to_return.push_back(edge->start);
+            to_return.push_back(edges_[id].start);
         }
     }
     return to_return;
 }
 
-// RoadGraph* RoadGraph::PrimMST(Point p) {
-//     return PrimMST(p.x, p.y);
-// }
-
-// RoadGraph* RoadGraph::PrimMST(double x, double y) {
-//     KDPoint p = tree_.findNearestNeighbor(x, y);
-// }
-
-// RoadGraph* RoadGraph::PrimMST(const RoadNode& node) {
-//     return PrimMST(node.)
-// }
-
-std::pair<std::map<RoadNode*, double>, std::map<RoadNode*, RoadNode*>> RoadGraph::PrimMST(Point p) {
-    RoadNode* start = tree_.findNearestNeighbor(p).node;
-    std::map<RoadNode*, double> dist;
-    std::map<RoadNode*, RoadNode*> prev;
+std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> RoadGraph::PrimMST(Point p) {
+    std::size_t start = tree_.findNearestNeighbor(p).node;
+    std::map<std::size_t, double> dist;
+    std::map<std::size_t, std::size_t> prev;
     for (RoadNode& n : nodes_) {
-        dist.insert({&n, 2.0});
-        prev.insert({&n, nullptr});
+        dist.insert({n.id, 2.0});
+        prev.insert({n.id, UINT32_MAX});
     }
     dist[start] = 0;
 
-    std::priority_queue<std::pair<double, RoadNode*>> q;
+    std::priority_queue<std::pair<double, std::size_t>> q;
     for (RoadNode& n : nodes_) {
-        q.push({dist[&n], &n});
+        q.push({dist[n.id], n.id});
     }
-    std::list<RoadNode*> list;
+    std::list<std::size_t> list;
 
     for (int i = 0; i < nodes_.size(); ++i) {
-        RoadNode* m = q.top().second;
+        std::size_t m = q.top().second;
         list.push_back(m);
-        for (RoadNode::RoadEdge* edge : m->edges) {
-            RoadNode* v = m == edge->end ? edge->start : edge->end;
+        for (std::size_t edge : nodes_[m].edges) {
+            std::size_t v = m == edges_[edge].end ? edges_[edge].start : edges_[edge].end;
             if (std::find(list.begin(), list.end(), v) == list.end()) {
-                if (1 - (1 - edge->crashProb)*(1 - dist[m]) < dist[v]) {
-                    dist[v] = 1 - (1 - edge->crashProb)*(1 - dist[m]);
+                if (1 - (1 - edges_[edge].crashProb)*(1 - dist[m]) < dist[v]) {
+                    dist[v] = 1 - (1 - edges_[edge].crashProb)*(1 - dist[m]);
                     prev[v] = m;
                 }
             }
@@ -314,24 +259,38 @@ std::pair<std::map<RoadNode*, double>, std::map<RoadNode*, RoadNode*>> RoadGraph
     return std::make_pair(dist, prev);
 }
 
-std::vector<RoadNode*> RoadGraph::DijkstraSSSP(Point p, Point q) {
-    RoadNode* start = tree_.findNearestNeighbor(p).node;
-    RoadNode* end = tree_.findNearestNeighbor(q).node;
-    std::list<RoadNode*> list;
-    std::map<RoadNode*, RoadNode*> prev = PrimMST(p).second;
-    for (RoadNode* n = end; n != nullptr; n = prev[n]) {
+std::vector<std::size_t> RoadGraph::DijkstraSSSP(Point p, Point q) {
+    std::size_t start = tree_.findNearestNeighbor(p).node;
+    std::size_t end = tree_.findNearestNeighbor(q).node;
+    std::list<std::size_t> list;
+    std::map<std::size_t, std::size_t> prev = PrimMST(p).second;
+    for (std::size_t n = end; n != UINT32_MAX; n = prev[n]) {
         list.push_front(n);
     }
-    std::vector<RoadNode*> vec;
-    for (RoadNode* n : list) {
+    std::vector<std::size_t> vec;
+    for (std::size_t n : list) {
         vec.push_back(n);
     }
     return vec;
 }
 
-// void RoadGraph::BFS(Point p) {
-//     RoadNode* start = tree_.findNearestNeighbor(p).node;
-//     std::map<RoadNode*, bool> visited;
-//     std::map<RoadEdge*, unsigned byte> 
-//     std::queue<>
-// }
+std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(Point p) {
+    std::size_t start = tree_.findNearestNeighbor(p).node;
+    std::map<std::size_t, std::vector<std::size_t>> graph; 
+    graph.insert({start,{}});
+    std::queue<std::size_t> q;
+    q.push(start);
+
+    while (!q.empty()) {
+        std::size_t v = q.front();
+        q.pop();
+        for (std::size_t w : getNeighbors(v)) {
+            if (graph.find(w) == graph.end()) {
+                graph[v].push_back(w);
+                graph.insert({w,{}});
+                q.push(w);
+            }
+        }
+    }
+    return graph;
+}

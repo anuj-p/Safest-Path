@@ -9,16 +9,14 @@ class KDTree {
     struct KDPoint {
         double x;
         double y;
-        RoadNode* node;
+        std::size_t node;
         std::size_t id;
-        KDPoint() : x(0), y(0), node(nullptr), id(0) {}
-        KDPoint(Point argPoint) : x(argPoint.x), y(argPoint.y), node(nullptr), id(0) {}
-        KDPoint(RoadNode& argNode) : x(argNode.pos.x), y(argNode.pos.y), node(&argNode), id(argNode.id) {}
-        KDPoint(RoadNode* argNode) : x(argNode->pos.x), y(argNode->pos.y), node(argNode), id(argNode->id) {}
-        KDPoint(std::size_t argId, Point argPoint) : x(argPoint.x), y(argPoint.y), node(nullptr), id(argId) {}
-        KDPoint(std::size_t argId) : x(0), y(0), node(nullptr), id(argId) {}
-        KDPoint(double argX, double argY) : x(argX), y(argY), node(nullptr), id(0) {}
-        KDPoint(std::size_t argId, double argX, double argY) : x(argX), y(argY), node(nullptr), id(argId) {}
+        KDPoint() : x(0), y(0), node(0), id(0) {}
+        KDPoint(Point argPoint) : x(argPoint.x), y(argPoint.y), node(0), id(0) {}
+        KDPoint(std::size_t argId, Point argPoint) : x(argPoint.x), y(argPoint.y), node(argId), id(argId) {}
+        KDPoint(std::size_t argId) : x(0), y(0), node(argId), id(argId) {}
+        KDPoint(double argX, double argY) : x(argX), y(argY), node(0), id(0) {}
+        KDPoint(std::size_t argId, double argX, double argY) : x(argX), y(argY), node(argId), id(argId) {}
         bool operator==(const KDPoint& rhs) const {
             return (x == rhs.x) && (y == rhs.y);
         }

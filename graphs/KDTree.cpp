@@ -43,7 +43,7 @@ KDTree::KDTree(std::vector<RoadNode>& newPoints) : root(NULL), size(newPoints.si
   }
   std::vector<KDPoint> points;
   for(std::size_t i = 0; i < newPoints.size(); ++i) {
-    points.push_back(KDPoint(newPoints[i]));
+    points.push_back(KDPoint(newPoints[i].id, newPoints[i].pos));
   }
   if (size == 1) {
     root = new KDTreeNode(points.at(0));
