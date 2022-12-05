@@ -31,6 +31,7 @@ class RoadGraph {
         std::vector<std::size_t> BFS(Point p1, Point p2);
         std::vector<std::size_t> BFS(std::size_t node1, std::size_t node2);
         std::map<std::size_t, std::vector<std::size_t>> BFS(Point p);
+        std::map<std::size_t, std::vector<std::size_t>> BFS(std::size_t start);
         std::vector<std::size_t> getNeighbors(std::size_t id);
 
     // private:
@@ -39,5 +40,5 @@ class RoadGraph {
         KDTree tree_;
         std::size_t nextNodeId;
         std::size_t nextEdgeId;
-        RoadNode& insertNode(std::string pos);
+        void fillMissingTrafficData();
 };

@@ -59,12 +59,13 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
             prev = cur;
         }
     }
-    tree_ = KDTree(nodes_);
+    fillMissingTrafficData();
     std::list<Reader::CrashEntry> crshEntries = r.getCrashEntries();
     for (const Reader::CrashEntry& entry : crshEntries) {
         addCrashNoRecalc(Point(entry.coordinates), static_cast<double>(entry.vehicles));
     }
     recalculateProbAll();
+    tree_ = KDTree(nodes_);
 }
 
 std::size_t RoadGraph::insertNode() {
@@ -224,11 +225,6 @@ std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id){
             to_return.push_back(edges_[edge].start);
         }
     }
-    std::cout << "neighbors of node #" << id << ": ";
-    for (std::size_t t : to_return) {
-        std::cout << t << " ";
-    }
-    std::cout<<std::endl;
     return to_return;
 }
 
@@ -250,6 +246,7 @@ std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> Roa
 
     for (int i = 0; i < nodes_.size(); ++i) {
         std::size_t m = q.top().second;
+        q.pop();
         list.push_back(m);
         for (std::size_t edge : nodes_[m].edges) {
             std::size_t v = m == edges_[edge].end ? edges_[edge].start : edges_[edge].end;
@@ -259,6 +256,11 @@ std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> Roa
                     prev[v] = m;
                 }
             }
+        }
+    }
+    for (RoadNode& n : nodes_) {
+        if (dist[n.id] == 2.0) {
+            dist[n.id] = 1.0;
         }
     }
     return std::make_pair(dist, prev);
@@ -280,7 +282,10 @@ std::vector<std::size_t> RoadGraph::DijkstraSSSP(Point p, Point q) {
 }
 
 std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(Point p) {
-    std::size_t start = tree_.findNearestNeighbor(p).node;
+    return BFS(tree_.findNearestNeighbor(p).node);
+}
+
+std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(std::size_t start) {
     std::map<std::size_t, std::vector<std::size_t>> graph; 
     graph.insert({start,{}});
     std::queue<std::size_t> q;
@@ -298,4 +303,45 @@ std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(Point p) {
         }
     }
     return graph;
+}
+
+void RoadGraph::fillMissingTrafficData() {
+    std::size_t start = UINT32_MAX;
+    for (std::size_t i = 0; i < nodes_.size(); ++i) {
+        for (std::size_t edge : nodes_[i].edges) {
+            if (edges_[edge].dailyDriver != 0) {
+                start = i;
+                break;
+            }
+        }
+    }
+    if (start != UINT32_MAX) {
+        std::map<std::size_t, std::vector<std::size_t>> graph = BFS(start);
+        std::queue<std::size_t> q;
+        q.push(start);
+        while (!q.empty()) {
+            std::size_t v = q.front();
+            q.pop();
+            for (std::size_t edge : nodes_[v].edges) {
+                if (edges_[edge].dailyDriver == 0) {
+                    double sum = 0.0;
+                    std::size_t num = 0;
+                    for (std::size_t n : nodes_[edges_[edge].start].edges) {
+                        if (edges_[n].dailyDriver != 0) {
+                            sum += edges_[n].dailyDriver;
+                            ++num;
+                        }
+                    }
+                    for (std::size_t n : nodes_[edges_[edge].end].edges) {
+                        if (edges_[n].dailyDriver != 0) {
+                            sum += edges_[n].dailyDriver;
+                            ++num;
+                        }
+                    }
+                    edges_[edge].dailyDriver = sum / num;
+                }
+            }
+
+        }
+    }
 }
