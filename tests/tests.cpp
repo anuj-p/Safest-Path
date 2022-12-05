@@ -36,36 +36,50 @@ void GraphTests() {
 
 
 
-    rg.insertEdge(r1,r2, 1);
-    rg.insertEdge(r2,r3, 1);
-    rg.insertEdge(r3,r4, 1);
-    rg.insertEdge(r4,r5, 1);
-    rg.insertEdge(r5,r6, 1);
-    rg.insertEdge(r6,r7, 1);
-    rg.insertEdge(r7,r8, 1);
-    rg.insertEdge(r8,r9, 1);
-    rg.insertEdge(r1,r8, 1);
-    rg.insertEdge(r1,r7, 1);
-    rg.insertEdge(r2,r7, 1);
-    rg.insertEdge(r3,r7, 1);
-    rg.insertEdge(r4,r7, 1);
-    rg.insertEdge(r4,r6, 1);
+    rg.insertEdge(r1,r2, 1, 0.2);
+    rg.insertEdge(r2,r3, 1, 0.1);
+    rg.insertEdge(r3,r4, 1, 0.8);
+    rg.insertEdge(r4,r5, 1, 0.1);
+    rg.insertEdge(r5,r6, 1, 0.3);
+    rg.insertEdge(r6,r7, 1, 0.7);
+    rg.insertEdge(r7,r8, 1, 0.4);
+    rg.insertEdge(r8,r9, 1, 0.9);
+    rg.insertEdge(r1,r8, 1, 0.7);
+    rg.insertEdge(r1,r7, 1, 0.3);
+    rg.insertEdge(r2,r7, 1, 0.5);
+    rg.insertEdge(r3,r7, 1, 0.6);
+    rg.insertEdge(r4,r7, 1, 0);
+    rg.insertEdge(r4,r6, 1, 0.5);
+    
 
     for (auto rn : rg.nodes_) {
         std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id  << " " << &rn << std::endl;
     }
 
+    // std::size_t id4 = rg.tree_.findNearestNeighbor(rg.nodes_[r4].pos).id;
+    // std::size_t id7 = rg.tree_.findNearestNeighbor(rg.nodes_[r7].pos).node;
 
-    auto shortestPath1To9 = rg.BFS(r1, r9);
+    // std::cout << "id4: " << id4 << "id7: " << id7 << std::endl;
+
+    auto shortestPath4To7 = rg.DijkstraSSSP(r4, r7);
+    auto shortestPath1To5 = rg.BFS(r1, r5);
     
     for (auto rn : rg.nodes_) {
         std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id << std::endl;
 
     }
 
-    for (auto n : shortestPath1To9) {
-        std::cout << "(" << n << ")" << std::endl;
+    std::cout << "BFS shortest unweighted path test: " << std::endl;
+    for (auto n : shortestPath1To5) {
+        std::cout << " (" << n << ") ";
     }
+
+    std::cout <<std::endl;
+    std::cout << "dijkstra's shortest weighted path test: " << std::endl;
+    for (auto n : shortestPath4To7) {
+        std::cout << " (" << n << ") ";
+    }
+    std::cout << std::endl;
 }
 
 int main() {

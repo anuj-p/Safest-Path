@@ -95,6 +95,12 @@ std::size_t RoadGraph::insertEdge(std::size_t node1, std::size_t node2, double l
     nodes_[node2].edges.push_back(edges_.size() - 1);
     return edges_.size() - 1;
 }
+std::size_t RoadGraph::insertEdge(std::size_t node1, std::size_t node2, double length, double crashProb) {
+    edges_.push_back(RoadNode::RoadEdge(nextEdgeId++, node1, node2, crashProb, length));
+    nodes_[node1].edges.push_back(edges_.size() - 1);
+    nodes_[node2].edges.push_back(edges_.size() - 1);
+    return edges_.size() - 1;
+}
 
 bool RoadGraph::containsNode(std::size_t id) const {
     return id < nextNodeId;
@@ -266,6 +272,56 @@ std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> Roa
     return std::make_pair(dist, prev);
 }
 
+std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> RoadGraph::PrimMST(std::size_t start) {
+    std::map<std::size_t, double> dist;
+    std::map<std::size_t, std::size_t> prev;
+    for (RoadNode& n : nodes_) {
+        dist.insert({n.id, 2.0});
+        prev.insert({n.id, UINT32_MAX});
+    }
+    dist[start] = 0;
+
+    std::priority_queue<std::pair<double, std::size_t>> q;
+    for (RoadNode& n : nodes_) {
+        q.push({dist[n.id], n.id});
+    }
+    std::list<std::size_t> list;
+
+    for (int i = 0; i < nodes_.size(); ++i) {
+        std::size_t m = q.top().second;
+        q.pop();
+        list.push_back(m);
+        for (std::size_t edge : nodes_[m].edges) {
+            std::size_t v = m == edges_[edge].end ? edges_[edge].start : edges_[edge].end;
+            if (std::find(list.begin(), list.end(), v) == list.end()) {
+                if (1 - (1 - edges_[edge].crashProb)*(1 - dist[m]) < dist[v]) {
+                    dist[v] = 1 - (1 - edges_[edge].crashProb)*(1 - dist[m]);
+                    prev[v] = m;
+                }
+            }
+        }
+    }
+    for (RoadNode& n : nodes_) {
+        if (dist[n.id] == 2.0) {
+            dist[n.id] = 1.0;
+        }
+    }
+    return std::make_pair(dist, prev);
+}
+
+std::vector<std::size_t> RoadGraph::DijkstraSSSP(std::size_t start, std::size_t end) {
+    std::list<std::size_t> list;
+    std::map<std::size_t, std::size_t> prev = PrimMST(start).second;
+    for (std::size_t n = end; n != UINT32_MAX; n = prev[n]) {
+        list.push_front(n);
+    }
+    std::vector<std::size_t> vec;
+    for (std::size_t n : list) {
+        vec.push_back(n);
+    }
+    return vec;
+}
+
 std::vector<std::size_t> RoadGraph::DijkstraSSSP(Point p, Point q) {
     std::size_t start = tree_.findNearestNeighbor(p).node;
     std::size_t end = tree_.findNearestNeighbor(q).node;
@@ -344,4 +400,13 @@ void RoadGraph::fillMissingTrafficData() {
 
         }
     }
+}
+
+std::size_t RoadGraph::getEdge(std::size_t start, std::size_t end) {
+    for (std::size_t edge : nodes_[start].edges) {
+        if (edges_[edge].end == end || edges_[edge].start == end) {
+            return edge;
+        }
+    }
+    return UINT32_MAX;
 }

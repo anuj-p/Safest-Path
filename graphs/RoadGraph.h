@@ -18,6 +18,7 @@ class RoadGraph {
         std::size_t insertNode(Point pos, std::string name);
         std::size_t insertEdge();
         std::size_t insertEdge(std::size_t node1, std::size_t node2, double length);
+        std::size_t insertEdge(std::size_t node1, std::size_t node2, double length, double crashProb);
         bool containsNode(std::size_t id) const;
         bool containsEdge(std::size_t id) const;
         std::size_t addCrash(Point pos, double numCrashes);
@@ -26,13 +27,16 @@ class RoadGraph {
         std::size_t addCrashNoRecalc(double xPos, double yPos, double numCrashes);
         std::size_t recalculateProb(std::size_t id);
         std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> PrimMST(Point p);
+        std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> PrimMST(std::size_t start);
         std::vector<std::size_t> DijkstraSSSP(Point p, Point q);
+        std::vector<std::size_t> DijkstraSSSP(std::size_t start, std::size_t end);
         void recalculateProbAll();
         std::vector<std::size_t> BFS(Point p1, Point p2);
         std::vector<std::size_t> BFS(std::size_t node1, std::size_t node2);
         std::map<std::size_t, std::vector<std::size_t>> BFS(Point p);
         std::map<std::size_t, std::vector<std::size_t>> BFS(std::size_t start);
         std::vector<std::size_t> getNeighbors(std::size_t id);
+        std::size_t getEdge(std::size_t start, std::size_t end);
 
     // private:
         std::vector<RoadNode> nodes_;
