@@ -7,6 +7,7 @@
 #include <list>
 #include <string>
 #include <map>
+#include <unordered_map>
 
 class RoadGraph {
     public:
@@ -27,7 +28,7 @@ class RoadGraph {
         std::size_t addCrashNoRecalc(double xPos, double yPos, double numCrashes);
         std::size_t recalculateProb(std::size_t id);
         std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> PrimMST(Point p);
-        std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> PrimMST(std::size_t start);
+        std::pair<std::unordered_map<std::size_t, double>, std::unordered_map<std::size_t, std::size_t>> PrimMST(std::size_t start, std::size_t end);
         std::vector<std::size_t> DijkstraSSSP(Point p, Point q);
         std::vector<std::size_t> DijkstraSSSP(std::size_t start, std::size_t end);
         void recalculateProbAll();
