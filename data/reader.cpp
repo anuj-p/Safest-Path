@@ -5,7 +5,7 @@
 
 std::list<Reader::RoadEntry> Reader::getRoadEntries() {
     std::list<Reader::RoadEntry> entries;
-    std::ifstream ifs{"./../data/RoadSegment.json"};
+    std::ifstream ifs{"./data/RoadSegment.json"};
     for (std::string line; std::getline(ifs, line); line = "]}") { // ends on ]}
         std::optional<std::string> name = findString(line, "name", false);
         std::optional<double> length = *findDouble(line, "SHAPE_Leng", false);
@@ -23,7 +23,7 @@ std::list<Reader::RoadEntry> Reader::getRoadEntries() {
 
 std::list<Reader::TrafficEntry> Reader::getTrafficEntries() {
     std::list<Reader::TrafficEntry> entries;
-    std::ifstream ifs{"./../data/Annual_Average_Daily_Traffic_-_2021.geojson"};
+    std::ifstream ifs{"./data/Annual_Average_Daily_Traffic_-_2021.geojson"};
     for (std::string line; std::getline(ifs, line); line = "") { // ends on new line
         std::optional<std::string> road_name = findString(line, "ROAD_NAME", true);
         std::optional<int> traffic = findInt(line, "AADT", true);
@@ -42,7 +42,7 @@ std::list<Reader::TrafficEntry> Reader::getTrafficEntries() {
 
 std::list<Reader::CrashEntry> Reader::getCrashEntries() {
     std::list<Reader::CrashEntry> entries;
-    std::ifstream ifs{"./../data/CRASHES_-_2021.geojson"};
+    std::ifstream ifs{"./data/CRASHES_-_2021.geojson"};
     for (std::string line; std::getline(ifs, line); line = "") { // ends on new line
         std::optional<int> vehicles = findInt(line, "NumberOfVehicles", true); 
         std::optional<double> latitude = findDouble(line, "TSCrashLatitude", true);
@@ -50,7 +50,7 @@ std::list<Reader::CrashEntry> Reader::getCrashEntries() {
         if (vehicles && latitude && longitude) {
             Reader::CrashEntry entry;
             entry.vehicles = *vehicles;
-            entry.coordinates = {*latitude, *longitude};
+            entry.coordinates = {*longitude, *latitude};
             entries.push_back(entry);
         }
     }
@@ -123,7 +123,7 @@ std::optional<std::list<std::pair<double, double>>> Reader::findCoordinatesList(
     std::vector<double> vals;
     std::string val = "";
     while (line[next_idx] != '\"' && line[next_idx] != '}') {
-        if (line[next_idx] != '0' && line[next_idx] != '1' && line[next_idx] != '2' && line[next_idx] != '3' && line[next_idx] != '4' && line[next_idx] != '5' && line[next_idx] != '6' && line[next_idx] != '7' && line[next_idx] != '8' && line[next_idx] != '9' && line[next_idx] != '.') {
+        if (line[next_idx] != '0' && line[next_idx] != '1' && line[next_idx] != '2' && line[next_idx] != '3' && line[next_idx] != '4' && line[next_idx] != '5' && line[next_idx] != '6' && line[next_idx] != '7' && line[next_idx] != '8' && line[next_idx] != '9' && line[next_idx] != '.' && line[next_idx] != '-') {
             if (val.length() >= 3) {
                 if (val[1] == '.' || (val.length() >= 4 && val[2] == '.') || (val.length() >= 5 && val[3] == '.') || (val.length() >= 6 && val[4] == '.')) {
                     vals.push_back(stod(val));
@@ -137,7 +137,7 @@ std::optional<std::list<std::pair<double, double>>> Reader::findCoordinatesList(
     }
 
     std::list<std::pair<double, double>> coordinates_list;
-    for (unsigned int i = 0; i < vals.size(); i += dim - 1) {
+    for (unsigned int i = 0; i < vals.size(); i += dim) {
         coordinates_list.push_back({vals[i], vals[i + 1]});
     }
 
