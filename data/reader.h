@@ -31,13 +31,13 @@ class Reader {
             std::pair<double, double> coordinates;
         };
 
-        std::list<RoadEntry> getRoadEntries();
-        std::list<TrafficEntry> getTrafficEntries();
-        std::list<CrashEntry> getCrashEntries();
+        static std::list<RoadEntry> getRoadEntries();
+        static std::list<TrafficEntry> getTrafficEntries();
+        static std::list<CrashEntry> getCrashEntries();
 
     private:
-        std::optional<std::string> findString(std::string line, std::string parameter, bool space);
-        std::optional<int> findInt(std::string line, std::string parameter, bool space);
-        std::optional<double> findDouble(std::string line, std::string parameter, bool space);
-        std::optional<std::list<std::pair<double, double>>> findCoordinatesList(std::string line, std::string parameter, unsigned int dim, bool space);
+        static std::optional<std::string> findString(std::string line, std::string parameter, bool space);
+        static std::optional<int> findInt(std::string line, std::string parameter, bool space);
+        static std::optional<double> findDouble(std::string line, std::string parameter, bool space);
+        static std::optional<std::list<std::pair<double, double>>> findCoordinatesList(std::string line, std::string parameter, unsigned int dim, bool space);
 };
