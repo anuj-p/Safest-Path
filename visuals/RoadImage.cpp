@@ -5,11 +5,11 @@
 
 RoadImage::RoadImage() : image(Image(10000, 13000)) {}
 
-void RoadImage::addPath(std::list<std::pair<double, double>> path, std::tuple<unsigned int, unsigned int, unsigned int> color) {
-    std::optional<std::pair<unsigned int, unsigned int>> last = std::nullopt;
+void RoadImage::addPath(std::list<std::pair<double, double>> path, std::tuple<uint8_t, uint8_t, uint8_t> color) {
+    std::optional<std::pair<size_t, size_t>> last = std::nullopt;
     for (const std::pair<double, double>& coord : path) {
-        unsigned int row = -1 * round(coord.second * 2000.0) + 86000;
-        unsigned int col = round(coord.first * 2000.0) + 184000;
+        size_t row = -1 * round(coord.second * 2000.0) + 86000;
+        size_t col = round(coord.first * 2000.0) + 184000;
 
         image.setPixel(row, col, {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
 
@@ -25,11 +25,11 @@ void RoadImage::addPath(std::list<std::pair<double, double>> path, std::tuple<un
                 // resolve row diff
                 if (row_diff > 0) { // if 
                     for (int i = 1; i < row_diff; i++) { // for each row diff assign a col
-                        image.setPixel((unsigned int)((int)row + i), (unsigned int)round(m*(double)((int)row + i) + b), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
+                        image.setPixel((size_t)((int)row + i), (size_t)round(m*(double)((int)row + i) + b), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
                     }
                 } else if (row_diff < 0) {
                     for (int i = -1; i > row_diff; i--) { // for each row diff assign a col
-                        image.setPixel((unsigned int)((int)row + i), (unsigned int)round(m*(double)((int)row + i) + b), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
+                        image.setPixel((size_t)((int)row + i), (size_t)round(m*(double)((int)row + i) + b), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
                     }
                 }
             }
@@ -41,12 +41,12 @@ void RoadImage::addPath(std::list<std::pair<double, double>> path, std::tuple<un
 
                 if (col_diff > 0) {
                     for (int i = 1; i < col_diff; i++) { // for each col diff assign a row
-                        image.setPixel((unsigned int)round(m*(double)((int)col + i) + b), (unsigned int)((int)col + i), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
+                        image.setPixel((size_t)round(m*(double)((int)col + i) + b), (size_t)((int)col + i), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
                     }
                 }
                 else if (col_diff < 0) {
                     for (int i = -1; i > col_diff; i--) { // for each col diff assign a row
-                        image.setPixel((unsigned int)round(m*(double)((int)col + i) + b), (unsigned int)((int)col + i), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
+                        image.setPixel((size_t)round(m*(double)((int)col + i) + b), (size_t)((int)col + i), {std::get<0>(color), std::get<1>(color), std::get<2>(color)});
                     }
                 }
             }
@@ -55,17 +55,17 @@ void RoadImage::addPath(std::list<std::pair<double, double>> path, std::tuple<un
     }
 }
 
-void RoadImage::addPath(Reader::RoadEntry road, std::tuple<unsigned int, unsigned int, unsigned int> color) {
+void RoadImage::addPath(Reader::RoadEntry road, std::tuple<uint8_t, uint8_t, uint8_t> color) {
     addPath(road.coordinates_list, color);
 }
 
-void RoadImage::addPaths(std::list<std::list<std::pair<double, double>>> paths, std::tuple<unsigned int, unsigned int, unsigned int> color) {
+void RoadImage::addPaths(std::list<std::list<std::pair<double, double>>> paths, std::tuple<uint8_t, uint8_t, uint8_t> color) {
     for (const std::list<std::pair<double, double>>& path : paths) {
         addPath(path, color);
     }
 }
 
-void RoadImage::addPaths(std::list<Reader::RoadEntry> roads, std::tuple<unsigned int, unsigned int, unsigned int> color) {
+void RoadImage::addPaths(std::list<Reader::RoadEntry> roads, std::tuple<uint8_t, uint8_t, uint8_t> color) {
     for (const Reader::RoadEntry& road : roads) {
         addPath(road, color);
     }
