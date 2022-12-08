@@ -1,5 +1,7 @@
 #include "KDTree.h"
 
+#include <iostream>
+
 KDTree::KDTree() : root(nullptr), size(0) {}
 
 KDTree::KDTree(bool flag) : root(nullptr), size(0) {
@@ -133,6 +135,9 @@ bool KDTree::smallerDimVal(const KDPoint& first, const KDPoint& second, int curD
 
 bool KDTree::shouldReplace(const KDPoint& target, const KDPoint& currentBest, const KDPoint& potential) const
 {
+    // std::cout << currentBest.x << " " << currentBest.y << std::endl;
+    // std::cout << potential.x << " " << potential.y << std::endl;
+    // std::cout << std::endl;
     uint64_t curDist = 0;
     uint64_t potDist = 0;
     for (std::size_t i = 0; i < 2; ++i) {
@@ -254,7 +259,8 @@ KDTree::KDTreeNode* KDTree::findNearestNeighborHelper(const KDPoint& query, std:
   }
 
   KDTreeNode* nearest = NULL;
-  if (smallerDimVal(query, curRoot->point, n)) {
+  bool traverseLeft = smallerDimVal(query, curRoot->point, n);
+  if (traverseLeft) {
     nearest = curRoot->left ? findNearestNeighborHelper(query, (n + 1) % 2, curRoot->left) : curRoot;
   } else {
     nearest = curRoot->right ? findNearestNeighborHelper(query, (n + 1) % 2, curRoot->right) : curRoot;
@@ -273,7 +279,7 @@ KDTree::KDTreeNode* KDTree::findNearestNeighborHelper(const KDPoint& query, std:
 
   if (splitDist <= radius) {
     KDTreeNode* tempNearest = NULL;
-    if (nearest == curRoot->left) {
+    if (traverseLeft) {
       tempNearest = curRoot->right ? findNearestNeighborHelper(query, (n + 1) % 2, curRoot->right) : curRoot;
     } else {
       tempNearest = curRoot->left ? findNearestNeighborHelper(query, (n + 1) % 2, curRoot->left) : curRoot;

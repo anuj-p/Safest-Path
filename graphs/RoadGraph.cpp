@@ -18,11 +18,11 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
     std::map<Point, std::size_t> nodes;
     std::list<Reader::RoadEntry> roadEntries = r.getRoadEntries();
     for (const Reader::RoadEntry& entry : roadEntries) {
-        std::size_t prev = UINT32_MAX;
+        std::size_t prev = static_cast<std::size_t>(-1);
         std::size_t coordListSize = entry.coordinates_list.size();
         double length = entry.length/(coordListSize - 1);
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
-            std::size_t cur = UINT32_MAX;
+            std::size_t cur = static_cast<std::size_t>(-1);
             Point p(pair);
             if (nodes.find(p) == nodes.end()) {
                 cur = insertNode(p, entry.name);
@@ -30,7 +30,7 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
             } else {
                 cur = nodes[p];
             }
-            if (prev != UINT32_MAX) {
+            if (prev != static_cast<std::size_t>(-1)) {
                 insertEdge(prev, cur, length);
             }
             prev = cur;
@@ -39,7 +39,7 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
 
     std::list<Reader::TrafficEntry> traffEntries = r.getTrafficEntries();
     for (const Reader::TrafficEntry& entry : traffEntries) {
-        std::size_t prev = UINT32_MAX;
+        std::size_t prev = static_cast<std::size_t>(-1);
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
             Point p(pair);
             if (nodes.find(p) == nodes.end()) {
@@ -49,9 +49,9 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
             if (nodes_[cur].name == "") {
                 nodes_[cur].name = entry.road_name;
             }
-            if (prev != UINT32_MAX) {
-                for (std::size_t edge : nodes_[prev].edges) {
-                    if (nodes_[edges_[edge].start].id == cur || nodes_[edges_[edge].end].id == cur) {
+            if (prev != static_cast<std::size_t>(-1)) {
+                for (const std::size_t& edge : nodes_[prev].edges) {
+                    if (edges_[edge].start == cur || edges_[edge].end == cur) {
                         edges_[edge].dailyDriver = static_cast<double>(entry.traffic);
                         break;
                     }
@@ -61,12 +61,12 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
         }
     }
     fillMissingTrafficData();
+    tree_ = KDTree(nodes_);
     std::list<Reader::CrashEntry> crshEntries = r.getCrashEntries();
     for (const Reader::CrashEntry& entry : crshEntries) {
         addCrashNoRecalc(Point(entry.coordinates), static_cast<double>(entry.vehicles));
     }
     recalculateProbAll();
-    tree_ = KDTree(nodes_);
 }
 
 std::size_t RoadGraph::insertNode() {
@@ -132,7 +132,7 @@ std::size_t RoadGraph::addCrash(double xPos, double yPos, double numCrashes) {
 std::size_t RoadGraph::addCrashNoRecalc(Point pos, double numCrashes) {
     std::size_t id = tree_.findNearestNeighbor(pos).node;
     numCrashes /= nodes_[id].edges.size();
-    for (std::size_t edge : nodes_[id].edges) {
+    for (const std::size_t& edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
     }
     return id;
@@ -158,7 +158,7 @@ std::size_t RoadGraph::recalculateProb(std::size_t id) {
 }
 
 void RoadGraph::recalculateProbAll() {
-    for (RoadNode::RoadEdge& edge : edges_) {
+    for (const RoadNode::RoadEdge& edge : edges_) {
         recalculateProb(edge.id);
     }
 }
@@ -241,7 +241,7 @@ std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> Roa
     std::map<std::size_t, std::size_t> prev;
     for (RoadNode& n : nodes_) {
         dist.insert({n.id, 2.0});
-        prev.insert({n.id, UINT32_MAX});
+        prev.insert({n.id, static_cast<std::size_t>(-1)});
     }
     dist[start] = 0;
 
@@ -280,20 +280,20 @@ std::pair<std::unordered_map<std::size_t, double>, std::unordered_map<std::size_
     std::priority_queue<std::pair<double, size_t>> queue;
     std::unordered_map<size_t, bool> visited;
 
-    for (RoadNode& node : nodes_) {
-        dist.insert({node.id, 1});
-        prev.insert({node.id, (size_t)-1});
-        queue.push({-1.0, node.id});
+    for (const RoadNode& node : nodes_) {
+        dist.insert({node.id, 2});
+        prev.insert({node.id, static_cast<std::size_t>(-1)});
+        queue.push({-2.0, node.id});
         visited.insert({node.id, false});
     }
     dist[start] = 0;
     queue.push({0, start});
 
-    while (queue.top().second != end) {
-        size_t curr = queue.top().second;
+    while (!queue.empty() && queue.top().second != end) {
+        std::size_t curr = queue.top().second;
         queue.pop();
         visited[curr] = true;
-        for (size_t edge : nodes_[curr].edges) {
+        for (const std::size_t& edge : nodes_[curr].edges) {
             std::size_t neighbor = curr == edges_[edge].end ? edges_[edge].start : edges_[edge].end;
             if (!visited[neighbor]) {
                 if (1-(1-dist[curr])*(1-edges_[edge].crashProb) < dist[neighbor]) {
@@ -304,18 +304,26 @@ std::pair<std::unordered_map<std::size_t, double>, std::unordered_map<std::size_
             }
         }
     }
+    for (const RoadNode& node : nodes_) {
+        if (dist[node.id] > 1) {
+            dist[node.id] = 1;
+        }
+    }
     return std::make_pair(dist, prev);
 }
 
 std::vector<std::size_t> RoadGraph::DijkstraSSSP(std::size_t start, std::size_t end) {
     std::list<std::size_t> list;
     std::unordered_map<std::size_t, std::size_t> prev = PrimMST(start, end).second;
-    for (std::size_t n = end; n != (size_t)(-1); n = prev[n]) {
+    for (std::size_t n = end; n != static_cast<std::size_t>(-1); n = prev[n]) {
         list.push_front(n);
     }
     std::vector<std::size_t> vec;
-    for (std::size_t n : list) {
+    for (const std::size_t& n : list) {
         vec.push_back(n);
+    }
+    if (vec.empty() || vec[0] != start) {
+        return {};
     }
     return vec;
 }
@@ -325,7 +333,7 @@ std::vector<std::size_t> RoadGraph::DijkstraSSSP(Point p, Point q) {
     std::size_t end = tree_.findNearestNeighbor(q).node;
     std::list<std::size_t> list;
     std::map<std::size_t, std::size_t> prev = PrimMST(p).second;
-    for (std::size_t n = end; n != UINT32_MAX; n = prev[n]) {
+    for (std::size_t n = end; n != static_cast<std::size_t>(-1); n = prev[n]) {
         list.push_front(n);
     }
     std::vector<std::size_t> vec;
@@ -360,33 +368,33 @@ std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(std::size_t start
 }
 
 void RoadGraph::fillMissingTrafficData() {
-    std::size_t start = UINT32_MAX;
+    std::size_t start = static_cast<std::size_t>(-1);
     for (std::size_t i = 0; i < nodes_.size(); ++i) {
-        for (std::size_t edge : nodes_[i].edges) {
+        for (const std::size_t& edge : nodes_[i].edges) {
             if (edges_[edge].dailyDriver != 0) {
                 start = i;
                 break;
             }
         }
     }
-    if (start != UINT32_MAX) {
+    if (start != static_cast<std::size_t>(-1)) {
         std::map<std::size_t, std::vector<std::size_t>> graph = BFS(start);
         std::queue<std::size_t> q;
         q.push(start);
         while (!q.empty()) {
             std::size_t v = q.front();
             q.pop();
-            for (std::size_t edge : nodes_[v].edges) {
+            for (const std::size_t& edge : nodes_[v].edges) {
                 if (edges_[edge].dailyDriver == 0) {
                     double sum = 0.0;
                     std::size_t num = 0;
-                    for (std::size_t n : nodes_[edges_[edge].start].edges) {
+                    for (const std::size_t& n : nodes_[edges_[edge].start].edges) {
                         if (edges_[n].dailyDriver != 0) {
                             sum += edges_[n].dailyDriver;
                             ++num;
                         }
                     }
-                    for (std::size_t n : nodes_[edges_[edge].end].edges) {
+                    for (const std::size_t& n : nodes_[edges_[edge].end].edges) {
                         if (edges_[n].dailyDriver != 0) {
                             sum += edges_[n].dailyDriver;
                             ++num;
@@ -395,7 +403,9 @@ void RoadGraph::fillMissingTrafficData() {
                     edges_[edge].dailyDriver = sum / num;
                 }
             }
-
+            for (const std::size_t& n : graph[v]) {
+                q.push(n);
+            }
         }
     }
 }
@@ -406,5 +416,5 @@ std::size_t RoadGraph::getEdge(std::size_t start, std::size_t end) {
             return edge;
         }
     }
-    return UINT32_MAX;
+    return static_cast<std::size_t>(-1);
 }
