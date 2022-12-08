@@ -55,22 +55,6 @@ void RoadImage::addPath(std::list<std::pair<double, double>> path, std::tuple<ui
     }
 }
 
-void RoadImage::addPath(Reader::RoadEntry road, std::tuple<uint8_t, uint8_t, uint8_t> color) {
-    addPath(road.coordinates_list, color);
-}
-
-void RoadImage::addPaths(std::list<std::list<std::pair<double, double>>> paths, std::tuple<uint8_t, uint8_t, uint8_t> color) {
-    for (const std::list<std::pair<double, double>>& path : paths) {
-        addPath(path, color);
-    }
-}
-
-void RoadImage::addPaths(std::list<Reader::RoadEntry> roads, std::tuple<uint8_t, uint8_t, uint8_t> color) {
-    for (const Reader::RoadEntry& road : roads) {
-        addPath(road, color);
-    }
-}
-
-void RoadImage::toPNG(const std::string& file_name) {
+void RoadImage::toPNG(const std::string& file_name) const {
     image.toPNG(file_name);
 }

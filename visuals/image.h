@@ -5,11 +5,11 @@
 
 class Image {
     public:
-        Image(size_t width, size_t height);
-        std::tuple<uint8_t, uint8_t, uint8_t> getPixel(size_t row, size_t col);
-        void setPixel(size_t row, size_t col, std::tuple<uint8_t, uint8_t, uint8_t> val);
-        void toPPM(const std::string& file_name);
-        void toPNG(const std::string& file_name);
+        Image(const size_t& width, const size_t& height);
+        std::tuple<uint8_t, uint8_t, uint8_t> getPixel(const size_t& row, const size_t& col) const;
+        void setPixel(const size_t& row, const size_t& col, const std::tuple<uint8_t, uint8_t, uint8_t>& val);
+        void toPPM(const std::string& file_name) const;
+        void toPNG(const std::string& file_name) const;
         ~Image();
     private:
         std::tuple<uint8_t, uint8_t, uint8_t>* image_;
