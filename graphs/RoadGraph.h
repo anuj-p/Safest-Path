@@ -1,7 +1,9 @@
 #pragma once
 
-#include "KDTree.h"
 #include "../data/reader.h"
+#include "utils.h"
+#include "nanoflann.hpp"
+#include "KDTreeVectorOfVectorsAdaptor.h"
 
 #include <vector>
 #include <list>
@@ -11,8 +13,7 @@
 
 class RoadGraph {
     public:
-        RoadGraph();
-        RoadGraph(bool flag);
+        RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std::list<Reader::TrafficEntry>& traffic_entries, const std::list<Reader::CrashEntry>& crash_entries);
         std::size_t insertNode();
         std::size_t insertNode(Point pos);
         std::size_t insertNode(double xPos, double yPos);
@@ -38,11 +39,13 @@ class RoadGraph {
         std::map<std::size_t, std::vector<std::size_t>> BFS(std::size_t start);
         std::vector<std::size_t> getNeighbors(std::size_t id);
         std::size_t getEdge(std::size_t start, std::size_t end);
+        size_t findNearestNeighbor(const std::pair<double, double>& coord) const;
+        ~RoadGraph();
 
     // private:
         std::vector<RoadNode> nodes_;
         std::vector<RoadNode::RoadEdge> edges_;
-        KDTree tree_;
+        KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>* tree_;
         std::size_t nextNodeId;
         std::size_t nextEdgeId;
         void fillMissingTrafficData();

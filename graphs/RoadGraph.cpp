@@ -1,5 +1,8 @@
 
 #include "RoadGraph.h"
+#include "utils.h"
+#include "nanoflann.hpp"
+#include "KDTreeVectorOfVectorsAdaptor.h"
 
 #include <sstream>
 #include <fstream>
@@ -11,13 +14,9 @@
 #include <algorithm>
 #include <unordered_map>
 
-RoadGraph::RoadGraph(bool flag) : nodes_(), edges_(), tree_() {}
-
-RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
-    Reader r;
+RoadGraph::RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std::list<Reader::TrafficEntry>& traffic_entries, const std::list<Reader::CrashEntry>& crash_entries) : nodes_(), edges_(), tree_() {
     std::map<Point, std::size_t> nodes;
-    std::list<Reader::RoadEntry> roadEntries = r.getRoadEntries();
-    for (const Reader::RoadEntry& entry : roadEntries) {
+    for (const Reader::RoadEntry& entry : road_entries) {
         std::size_t prev = static_cast<std::size_t>(-1);
         std::size_t coordListSize = entry.coordinates_list.size();
         double length = entry.length/(coordListSize - 1);
@@ -37,8 +36,7 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
         }   
     }
 
-    std::list<Reader::TrafficEntry> traffEntries = r.getTrafficEntries();
-    for (const Reader::TrafficEntry& entry : traffEntries) {
+    for (const Reader::TrafficEntry& entry : traffic_entries) {
         std::size_t prev = static_cast<std::size_t>(-1);
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
             Point p(pair);
@@ -61,9 +59,17 @@ RoadGraph::RoadGraph() : nodes_(), edges_(), tree_() {
         }
     }
     fillMissingTrafficData();
-    tree_ = KDTree(nodes_);
-    std::list<Reader::CrashEntry> crshEntries = r.getCrashEntries();
-    for (const Reader::CrashEntry& entry : crshEntries) {
+
+    std::vector<std::vector<double>> road_entries_vec;
+    for (const Reader::RoadEntry& entry : road_entries) {
+        for (const std::pair<double, double>& coord : entry.coordinates_list) {
+            road_entries_vec.push_back({coord.first, coord.second});
+        }
+    }
+    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec, 10);
+    tree_->index->buildIndex();
+
+    for (const Reader::CrashEntry& entry : crash_entries) {
         addCrashNoRecalc(Point(entry.coordinates), static_cast<double>(entry.vehicles));
     }
     recalculateProbAll();
@@ -111,7 +117,7 @@ bool RoadGraph::containsEdge(std::size_t id) const {
 }
 
 std::size_t RoadGraph::addCrash(Point pos, double numCrashes) {
-    std::size_t id = tree_.findNearestNeighbor(pos).node;
+    std::size_t id = findNearestNeighbor({pos.x, pos.y});
     numCrashes /= nodes_[id].edges.size();
     for (std::size_t edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
@@ -120,7 +126,7 @@ std::size_t RoadGraph::addCrash(Point pos, double numCrashes) {
     return id;
 }
 std::size_t RoadGraph::addCrash(double xPos, double yPos, double numCrashes) {
-    std::size_t id = tree_.findNearestNeighbor(Point(xPos, yPos)).node;
+    std::size_t id = findNearestNeighbor({xPos, yPos});
     numCrashes /= nodes_[id].edges.size();
     for (std::size_t edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
@@ -130,7 +136,7 @@ std::size_t RoadGraph::addCrash(double xPos, double yPos, double numCrashes) {
 }
 
 std::size_t RoadGraph::addCrashNoRecalc(Point pos, double numCrashes) {
-    std::size_t id = tree_.findNearestNeighbor(pos).node;
+    std::size_t id = findNearestNeighbor({pos.x, pos.y});
     numCrashes /= nodes_[id].edges.size();
     for (const std::size_t& edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
@@ -138,7 +144,7 @@ std::size_t RoadGraph::addCrashNoRecalc(Point pos, double numCrashes) {
     return id;
 }
 std::size_t RoadGraph::addCrashNoRecalc(double xPos, double yPos, double numCrashes) {
-    std::size_t id = tree_.findNearestNeighbor(Point(xPos, yPos)).node;
+    std::size_t id = findNearestNeighbor({xPos, yPos});
     numCrashes /= nodes_[id].edges.size();
     for (std::size_t edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
@@ -164,7 +170,7 @@ void RoadGraph::recalculateProbAll() {
 }
 
 std::vector<std::size_t> RoadGraph::BFS(Point p1, Point p2){
-    return BFS(tree_.findNearestNeighbor(p1).node, tree_.findNearestNeighbor(p2).node);
+    return BFS(findNearestNeighbor({p1.x, p1.y}), findNearestNeighbor({p2.x, p2.y}));
 }
 
 std::vector<std::size_t> RoadGraph::BFS(std::size_t id1, std::size_t id2){   
@@ -236,7 +242,7 @@ std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id){
 }
 
 std::pair<std::map<std::size_t, double>, std::map<std::size_t, std::size_t>> RoadGraph::PrimMST(Point p) {
-    std::size_t start = tree_.findNearestNeighbor(p).node;
+    std::size_t start = findNearestNeighbor({p.x, p.y});
     std::map<std::size_t, double> dist;
     std::map<std::size_t, std::size_t> prev;
     for (RoadNode& n : nodes_) {
@@ -329,8 +335,8 @@ std::vector<std::size_t> RoadGraph::DijkstraSSSP(std::size_t start, std::size_t 
 }
 
 std::vector<std::size_t> RoadGraph::DijkstraSSSP(Point p, Point q) {
-    std::size_t start = tree_.findNearestNeighbor(p).node;
-    std::size_t end = tree_.findNearestNeighbor(q).node;
+    std::size_t start = findNearestNeighbor({p.x, p.y});;
+    std::size_t end = findNearestNeighbor({q.x, q.y});;
     std::list<std::size_t> list;
     std::map<std::size_t, std::size_t> prev = PrimMST(p).second;
     for (std::size_t n = end; n != static_cast<std::size_t>(-1); n = prev[n]) {
@@ -344,7 +350,7 @@ std::vector<std::size_t> RoadGraph::DijkstraSSSP(Point p, Point q) {
 }
 
 std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(Point p) {
-    return BFS(tree_.findNearestNeighbor(p).node);
+    return BFS(findNearestNeighbor({p.x, p.y}));
 }
 
 std::map<std::size_t, std::vector<std::size_t>> RoadGraph::BFS(std::size_t start) {
@@ -417,4 +423,23 @@ std::size_t RoadGraph::getEdge(std::size_t start, std::size_t end) {
         }
     }
     return static_cast<std::size_t>(-1);
+}
+
+size_t RoadGraph::findNearestNeighbor(const std::pair<double, double>& coord) const {
+    std::vector<double> coordinates = {coord.first, coord.second};
+
+    size_t num_results = 1;
+    nanoflann::KNNResultSet<double> result_set(num_results);
+    std::vector<size_t> ret_indexes(num_results);
+    std::vector<double> out_dists_sqr(num_results);
+
+    result_set.init(&ret_indexes[0], &out_dists_sqr[0]);
+
+    tree_->index->findNeighbors(result_set, &coordinates[0], nanoflann::SearchParams(10));
+
+    return ret_indexes[0];
+}
+
+RoadGraph::~RoadGraph() {
+    delete tree_;
 }
