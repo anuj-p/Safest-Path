@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <fstream>
 
-Image::Image(size_t width, size_t height) : width_(width), height_(height) {
+Image::Image(const size_t& width, const size_t& height) : width_(width), height_(height) {
     image_ = new std::tuple<uint8_t, uint8_t, uint8_t>[width_ * height_];
     for (size_t row = 0; row < height_; row++) {
         for (size_t col = 0; col < width_; col++) {
@@ -13,15 +13,15 @@ Image::Image(size_t width, size_t height) : width_(width), height_(height) {
     }
 }
 
-std::tuple<uint8_t, uint8_t, uint8_t> Image::getPixel(size_t row, size_t col) {
+std::tuple<uint8_t, uint8_t, uint8_t> Image::getPixel(const size_t& row, const size_t& col) const {
     return image_[col + row * width_];
 }
 
-void Image::setPixel(size_t row, size_t col, std::tuple<uint8_t, uint8_t, uint8_t> val) {
+void Image::setPixel(const size_t& row, const size_t& col, const std::tuple<uint8_t, uint8_t, uint8_t>& val) {
     image_[col + row * width_] = val;
 }
 
-void Image::toPPM(const std::string& file_name) {
+void Image::toPPM(const std::string& file_name) const {
     std::ofstream file;
     file.open(file_name);
     if (file.bad() || file.fail()) throw std::runtime_error("");
@@ -40,12 +40,12 @@ void Image::toPPM(const std::string& file_name) {
     file.close();
 }
 
-void Image::toPNG(const std::string& file_name) {
+void Image::toPNG(const std::string& file_name) const {
     unsigned char *byte_data = new unsigned char[width_ * height_ * 4];
 
     for (size_t row = 0; row < height_; row++) {
         for (size_t col = 0; col < width_; col++) {
-            std::tuple<uint8_t, uint8_t, uint8_t> pixel = getPixel(row, col);
+            const std::tuple<uint8_t, uint8_t, uint8_t>& pixel = getPixel(row, col);
 
             size_t i = col + row * width_;
             byte_data[(i * 4)] = std::get<0>(pixel);
