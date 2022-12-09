@@ -228,17 +228,17 @@ void ReaderTests() {
 }
 
 void GraphTests() {
-    RoadGraph rg(false);
-    rg.insertNode(0,0);
-    auto r1 = rg.insertNode(1,0);
-    auto r2 = rg.insertNode(1,5);
-    auto r3 = rg.insertNode(0,7);
-    auto r4 = rg.insertNode(3,8.5);
-    auto r5 = rg.insertNode(2,10);
-    auto r6 = rg.insertNode(5,10);
-    auto r7 = rg.insertNode(4.5, 5);
-    auto r8 = rg.insertNode(5.3,0);
-    auto r9 = rg.insertNode(10,10);
+    RoadGraph rg;
+    rg.insertNode({0,0});
+    auto r1 = rg.insertNode({1,0});
+    auto r2 = rg.insertNode({1,5});
+    auto r3 = rg.insertNode({0,7});
+    auto r4 = rg.insertNode({3,8.5});
+    auto r5 = rg.insertNode({2,10});
+    auto r6 = rg.insertNode({5,10});
+    auto r7 = rg.insertNode({4.5, 5});
+    auto r8 = rg.insertNode({5.3,0});
+    auto r9 = rg.insertNode({10,10});
 
 
 
@@ -259,22 +259,29 @@ void GraphTests() {
     
 
     for (auto rn : rg.nodes_) {
-        std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id  << " " << &rn << std::endl;
+        std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id  << " " << &rn << std::endl;
     }
 
-    auto shortestPath4To7 = rg.DijkstraSSSP(r4, r7);
+    auto shortestPath4To7 = rg.Dijkstra(r4, r7);
     auto shortestPath1To5 = rg.BFS(r1, r5);
-    std::map<std::size_t, std::vector<std::size_t>> graphFrom1 = rg.BFS(r1);
+    std::vector<std::vector<std::size_t>> graphFrom1 = rg.ComponentBFS(r1);
     
     for (auto rn : rg.nodes_) {
-        std::cout << rn.pos.x << " " << rn.pos.y << " " << rn.id << std::endl;
+        std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id << std::endl;
 
     }
 
+    std::vector<std::vector<double>> road_entries_vec;
+    for (const RoadNode& node : rg.nodes_) {
+        road_entries_vec.push_back({node.pos.first, node.pos.second});
+    }
+    rg.tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec, 10);
+    rg.tree_->index->buildIndex();
+
     std::cout << "KDTree findNearestNeighbor accuracy test: " << std::endl;
-    std::size_t id4 = rg.tree_.findNearestNeighbor(rg.nodes_[r4].pos).id;
-    std::size_t id7 = rg.tree_.findNearestNeighbor(rg.nodes_[r7].pos).node;
-    std::cout << "id4: " << id4 << "id7: " << id7 << std::endl;
+    std::size_t id4 = rg.findNearestNeighbor(rg.nodes_[r4].pos);
+    std::size_t id7 = rg.findNearestNeighbor(rg.nodes_[r7].pos);
+    std::cout << "id4: " << id4 << "\nid7: " << id7 << std::endl;
 
     std::cout << "BFS shortest unweighted path test: " << std::endl;
     for (auto n : shortestPath1To5) {
@@ -289,9 +296,9 @@ void GraphTests() {
     std::cout << std::endl;
 
     std::cout << "BFS Graph generator test: " << std::endl;
-    for (const auto& n : graphFrom1) {
-        std::cout << "node " << n.first << "'s children: ";
-        for (std::size_t t : n.second) {
+    for (std::size_t i = 0; i < graphFrom1.size(); ++i) {
+        std::cout << "node " << i << "'s children: ";
+        for (const std::size_t& t : graphFrom1[i]) {
             std::cout << " (" << t << ") ";
         }
         std::cout<<std::endl;
@@ -308,7 +315,7 @@ int main() {
 
     std::cout << "=======================" << std::endl;
     std::cout << "Starting Reader tests..." << std::endl;
-    ReaderTests();
+    // ReaderTests();
     std::cout << "=======================" << std::endl;
     std::cout << "Completed Reader tests..." << std::endl;
 
