@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <iostream>
+#include <queue>
 
 int main() {
     std::cout << "Reading roads file..." << std::endl;
@@ -67,16 +68,31 @@ int main() {
     std::cout << graph.edges_.size() << std::endl;
 
     std::cout << "Using Dijkstra's..." << std::endl;
-    std::vector<size_t> path_idx = graph.DijkstraSSSP(5000000, 1000000);
+    std::vector<size_t> path_idx = graph.Dijkstra(5000000, 1000000);
     std::cout << path_idx.size() << std::endl;
 
     std::list<std::pair<double, double>> path;
     for (const size_t& idx : path_idx) {
-        path.push_back({graph.nodes_[idx].pos.x, graph.nodes_[idx].pos.y});
+        path.push_back(graph.nodes_[idx].pos);
     }
 
     road_image.addBoldPath(path, {255, 0, 0});
 
     std::cout << "Outputting image..." << std::endl;
     road_image.toPNG("new_il.png");
+
+    std::vector<std::vector<std::size_t>> bfs = graph.ComponentBFS(0);
+    std::queue<std::size_t> queue;
+    queue.push(0);
+    std::size_t count = 0;
+    while (!queue.empty()) {
+        std::size_t n = queue.front();
+        queue.pop();
+        ++count;
+        for (const std::size_t& i : bfs[n]) {
+            queue.push(i);
+        }
+    }
+    std::cout << graph.nodes_.size() << " " << count << std::endl;
+    
 }
