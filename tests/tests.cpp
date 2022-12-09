@@ -228,6 +228,8 @@ void ReaderTests() {
 }
 
 void GraphTests() {
+    std::cout << "-> [Graph Test 1]" << std::endl;
+
     RoadGraph rg;
     rg.insertNode({0,0});
     auto r1 = rg.insertNode({1,0});
@@ -258,18 +260,21 @@ void GraphTests() {
     rg.insertEdge(r4,r6, 1, 0.5);
     
 
-    for (auto rn : rg.nodes_) {
-        std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id  << " " << &rn << std::endl;
-    }
+    // for (auto rn : rg.nodes_) {
+    //     std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id  << " " << &rn << std::endl;
+    // }
+    std::cout << "-> [Graph Test 2]" << std::endl;
 
     auto shortestPath4To7 = rg.Dijkstra(r4, r7);
+
+    std::cout << "-> [Graph Test 3]" << std::endl;
+
     auto shortestPath1To5 = rg.BFS(r1, r5);
     std::vector<std::vector<std::size_t>> graphFrom1 = rg.ComponentBFS(r1);
     
-    for (auto rn : rg.nodes_) {
-        std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id << std::endl;
-
-    }
+    // for (auto rn : rg.nodes_) {
+    //     std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id << std::endl;
+    // }
 
     std::vector<std::vector<double>> road_entries_vec;
     for (const RoadNode& node : rg.nodes_) {
@@ -278,46 +283,51 @@ void GraphTests() {
     rg.tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec, 10);
     rg.tree_->index->buildIndex();
 
-    std::cout << "KDTree findNearestNeighbor accuracy test: " << std::endl;
+    // std::cout << "KDTree findNearestNeighbor accuracy test: " << std::endl;
     std::size_t id4 = rg.findNearestNeighbor(rg.nodes_[r4].pos);
     std::size_t id7 = rg.findNearestNeighbor(rg.nodes_[r7].pos);
-    std::cout << "id4: " << id4 << "\nid7: " << id7 << std::endl;
+    // std::cout << "id4: " << id4 << "\nid7: " << id7 << std::endl;
 
-    std::cout << "BFS shortest unweighted path test: " << std::endl;
-    for (auto n : shortestPath1To5) {
-        std::cout << " (" << n << ") ";
-    }
+    // std::cout << "BFS shortest unweighted path test: " << std::endl;
+    // for (auto n : shortestPath1To5) {
+    //     std::cout << " (" << n << ") ";
+    // }
 
-    std::cout <<std::endl;
-    std::cout << "dijkstra's shortest weighted path test: " << std::endl;
-    for (auto n : shortestPath4To7) {
-        std::cout << " (" << n << ") ";
-    }
-    std::cout << std::endl;
+    // std::cout <<std::endl;
+    // std::cout << "dijkstra's shortest weighted path test: " << std::endl;
+    // for (auto n : shortestPath4To7) {
+    //     std::cout << " (" << n << ") ";
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "BFS Graph generator test: " << std::endl;
-    for (std::size_t i = 0; i < graphFrom1.size(); ++i) {
-        std::cout << "node " << i << "'s children: ";
-        for (const std::size_t& t : graphFrom1[i]) {
-            std::cout << " (" << t << ") ";
-        }
-        std::cout<<std::endl;
-    }
+    // std::cout << "BFS Graph generator test: " << std::endl;
+    // for (std::size_t i = 0; i < graphFrom1.size(); ++i) {
+    //     std::cout << "node " << i << "'s children: ";
+    //     for (const std::size_t& t : graphFrom1[i]) {
+    //         std::cout << " (" << t << ") ";
+    //     }
+    //     std::cout<<std::endl;
+    // }
 }
 
 int main() {
     std::cout << "=======================" << std::endl;
+    std::cout << "Starting Reader tests..." << std::endl;
+    ReaderTests();
+    std::cout << "=======================" << std::endl;
+    std::cout << "Completed Reader tests..." << std::endl;
+
+    std::cout << "=======================" << std::endl;
     std::cout << "Starting Image tests..." << std::endl;
-    //ImageTests();
-    GraphTests();
+    ImageTests();
     std::cout << "Completed Image tests." << std::endl;
     std::cout << "=======================" << std::endl;
 
     std::cout << "=======================" << std::endl;
-    std::cout << "Starting Reader tests..." << std::endl;
-    // ReaderTests();
+    std::cout << "Starting Graph tests..." << std::endl;
+    GraphTests();
+    std::cout << "Completed Graph tests." << std::endl;
     std::cout << "=======================" << std::endl;
-    std::cout << "Completed Reader tests..." << std::endl;
 
     return 0;
 }
