@@ -259,67 +259,67 @@ void GraphTests() {
     rg.insertEdge(r4,r7, 1, 0);
     rg.insertEdge(r4,r6, 1, 0.5);
     
+    if (rg.getNodes().size() != 10) throw std::runtime_error("insertNode did not insert all nodes into graph");
+    if (rg.getEdges().size() != 14) throw std::runtime_error("insertEdge did not insert all edges into graph");
+    if (!(rg.getNodes().at(0).pos.first == 0 && rg.getNodes().at(0).pos.second == 0)) throw std::runtime_error("graph has incorrect node position value");
+    if (!(rg.getNodes().at(3).pos.first == 0 && rg.getNodes().at(3).pos.second == 7)) throw std::runtime_error("graph has incorrect node position value");
+    if (!(rg.getNodes().at(7).pos.first == 4.5 && rg.getNodes().at(7).pos.second == 5)) throw std::runtime_error("graph has incorrect node position value");
+    if (rg.getEdges().at(9).start != 1) throw std::runtime_error("graph has incorrect edge start/end node value");
+    if (rg.getEdges().at(13).end != 6) throw std::runtime_error("graph has incorrect edge start/end node value");
+    if (rg.getEdges().at(0).start != 1) throw std::runtime_error("graph has incorrect edge start/end node value");
+    if (rg.getEdges().at(0).end != 2) throw std::runtime_error("graph has incorrect edge start/end node value");
 
-    // for (auto rn : rg.nodes_) {
-    //     std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id  << " " << &rn << std::endl;
-    // }
     std::cout << "-> [Graph Test 2]" << std::endl;
 
     auto shortestPath4To7 = rg.Dijkstra(r4, r7);
+    if (shortestPath4To7.size() != 2) throw std::runtime_error("Dijkstra path incorrect length");
+    if (shortestPath4To7[0] != 4) throw std::runtime_error("Dijkstra path incorrect nodes");
+    if (shortestPath4To7[1] != 7) throw std::runtime_error("Dijkstra path incorrect nodes");
 
     std::cout << "-> [Graph Test 3]" << std::endl;
 
     auto shortestPath1To5 = rg.BFS(r1, r5);
+    if (shortestPath1To5.size() != 4) throw std::runtime_error("BFS path incorrect length");
+    if (shortestPath1To5[0] != 1) throw std::runtime_error("BFS path incorrect nodes");
+    if (shortestPath1To5[1] != 7) throw std::runtime_error("BFS path incorrect nodes");
+    if (shortestPath1To5[2] != 6) throw std::runtime_error("BFS path incorrect nodes");
+    if (shortestPath1To5[3] != 5) throw std::runtime_error("BFS path incorrect nodes");
     std::vector<std::vector<std::size_t>> graphFrom1 = rg.ComponentBFS(r1);
-    
-    // for (auto rn : rg.nodes_) {
-    //     std::cout << rn.pos.first << " " << rn.pos.second << " " << rn.id << std::endl;
-    // }
+    std::vector<std::size_t> row1Nodes({2, 8, 7});
+    std::vector<std::size_t> row2Nodes({3});
+    std::vector<std::size_t> row6Nodes({5});
+    std::vector<std::size_t> row7Nodes({6,4});
+    std::vector<std::size_t> row8Nodes({9});
+    if (graphFrom1.size() != 10) throw std::runtime_error("BFS Graph generator doesn't cover full graph");
+    if (!graphFrom1[0].empty()) throw std::runtime_error("BFS Graph generator has incorrect connections");
+    if (!(graphFrom1[1] == row1Nodes)) throw std::runtime_error("BFS Graph generator has incorrect connections 1");
+    if (!(graphFrom1[2] == row2Nodes)) throw std::runtime_error("BFS Graph generator has incorrect connections 2");
+    if (!graphFrom1[3].empty()) throw std::runtime_error("BFS Graph generator has incorrect connections");
+    if (!graphFrom1[4].empty()) throw std::runtime_error("BFS Graph generator has incorrect connections");
+    if (!graphFrom1[5].empty()) throw std::runtime_error("BFS Graph generator has incorrect connections");
+    if (!(graphFrom1[6] == row6Nodes)) throw std::runtime_error("BFS Graph generator has incorrect connections 3");
+    if (!(graphFrom1[7] == row7Nodes)) throw std::runtime_error("BFS Graph generator has incorrect connections 4");
+    if (!(graphFrom1[8] == row8Nodes)) throw std::runtime_error("BFS Graph generator has incorrect connections 5");
+    if (!graphFrom1[9].empty()) throw std::runtime_error("BFS Graph generator has incorrect connections");
 
-    std::vector<std::vector<double>> road_entries_vec;
-    for (const RoadNode& node : rg.nodes_) {
-        road_entries_vec.push_back({node.pos.first, node.pos.second});
-    }
-    rg.tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec, 10);
-    rg.tree_->index->buildIndex();
+    rg.buildTree();
+    std::size_t id4 = rg.findNearestNeighbor(rg.getNodes().at(r4).pos);
 
-    // std::cout << "KDTree findNearestNeighbor accuracy test: " << std::endl;
-    std::size_t id4 = rg.findNearestNeighbor(rg.nodes_[r4].pos);
-    std::size_t id7 = rg.findNearestNeighbor(rg.nodes_[r7].pos);
-    // std::cout << "id4: " << id4 << "\nid7: " << id7 << std::endl;
-
-    // std::cout << "BFS shortest unweighted path test: " << std::endl;
-    // for (auto n : shortestPath1To5) {
-    //     std::cout << " (" << n << ") ";
-    // }
-
-    // std::cout <<std::endl;
-    // std::cout << "dijkstra's shortest weighted path test: " << std::endl;
-    // for (auto n : shortestPath4To7) {
-    //     std::cout << " (" << n << ") ";
-    // }
-    // std::cout << std::endl;
-
-    // std::cout << "BFS Graph generator test: " << std::endl;
-    // for (std::size_t i = 0; i < graphFrom1.size(); ++i) {
-    //     std::cout << "node " << i << "'s children: ";
-    //     for (const std::size_t& t : graphFrom1[i]) {
-    //         std::cout << " (" << t << ") ";
-    //     }
-    //     std::cout<<std::endl;
-    // }
+    std::size_t id7 = rg.findNearestNeighbor(rg.getNodes().at(r7).pos);
+    if (id4 != 4) throw std::runtime_error("wrong nearest node");
+    if (id7 != 7) throw std::runtime_error("wrong nearest node");
 }
 
 int main() {
     std::cout << "=======================" << std::endl;
     std::cout << "Starting Reader tests..." << std::endl;
-    ReaderTests();
-    std::cout << "=======================" << std::endl;
+    //ReaderTests();
     std::cout << "Completed Reader tests..." << std::endl;
+    std::cout << "=======================" << std::endl;
 
     std::cout << "=======================" << std::endl;
     std::cout << "Starting Image tests..." << std::endl;
-    ImageTests();
+    //ImageTests();
     std::cout << "Completed Image tests." << std::endl;
     std::cout << "=======================" << std::endl;
 
