@@ -429,3 +429,11 @@ std::vector<RoadNode::RoadEdge>& RoadGraph::getEdges() {
 KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>* RoadGraph::getTree() {
     return tree_;
 }
+
+void RoadGraph::buildTree() {
+    for (const RoadNode& node : nodes_) {
+        road_entries_vec_.push_back({node.pos.first, node.pos.second});
+    }
+    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+    tree_->index->buildIndex();
+}

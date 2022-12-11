@@ -225,7 +225,12 @@ class RoadGraph {
         */
         ~RoadGraph();
 
-    // private:
+        /**
+         * @todo Add later
+        */
+        void buildTree();
+
+    private:
         /**
          * Internal representation of Node list, Edge list, and KDTree
          * 
