@@ -16,7 +16,10 @@ If the datasets are in the `data` folder, enter `./main.out` into your terminal.
 ### Viewing
 To see your results, simply go to where you generated the image and open it. The image should have the safest route marked in red on top of the road network of Illinois.
 
-### Testing
+### For Arbitrary Datasets
+The files can be used to make a program to find safest paths for any road network. To do this, the Reader must be modified to read the new datasets. If doing so, ensure that the reader uses the same as Reader for all public functions and the same structs as found in the ReaderUtils class in `data\utils.h` and `data\utils.cpp`. Additionally, modifying `build\main.cpp` will be helpful, as it currently assumes a terminal request of `./main.out` with no additional arguments is the Illinois datasets in the `graphs` folder and assumes that road name information is available.
+
+## Testing
 To run the test suite, you must place the datasets into the `data` folder. Once done, compile by typing `make tests`, then run by typing `./tests.out`. Tests are split into three categories, ReaderTests, ImageTests, and GraphTests. ReaderTests test the Reader and see if it can successfully read and store data from the datasets. ImageTests test Image construction and pixel manipulation. These tests are programmatically confirmed but can be visually confirmed, as it outputs PPM images into the `tests` folder. Note that the Windows OS does not have a default PPM reader, so one must be downloaded for Windows users. GraphTests test RoadGraph construction (i.e., the empty constructor along with insertNode and insertEdge), Dijkstra's algorithm, BFS, and findNearestNeighbor.
 
 ## Authors and acknowledgment
