@@ -7,9 +7,9 @@
 
 RoadGraph::RoadGraph() : nodes_(), edges_(), road_entries_vec_(), tree_(nullptr) {}
 
-RoadGraph::RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std::list<Reader::TrafficEntry>& traffic_entries, const std::list<Reader::CrashEntry>& crash_entries) : nodes_(), edges_(), road_entries_vec_(), tree_(nullptr) {
+RoadGraph::RoadGraph(const std::list<ReaderUtils::RoadEntry>& road_entries, const std::list<ReaderUtils::TrafficEntry>& traffic_entries, const std::list<ReaderUtils::CrashEntry>& crash_entries) : nodes_(), edges_(), road_entries_vec_(), tree_(nullptr) {
     std::map<std::pair<double, double>, std::size_t> nodes;
-    for (const Reader::RoadEntry& entry : road_entries) {
+    for (const ReaderUtils::RoadEntry& entry : road_entries) {
         std::size_t prev = static_cast<std::size_t>(-1);
         std::pair<double, double> prev_pos;
         std::size_t coordListSize = entry.coordinates_list.size();
@@ -17,6 +17,7 @@ RoadGraph::RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std
             std::size_t cur = static_cast<std::size_t>(-1);
             if (nodes.find(pair) == nodes.end()) {
                 cur = insertNode(pair, entry.name);
+                std::transform(nodes_[cur].name.begin(), nodes_[cur].name.end(), nodes_[cur].name.begin(), ::toupper);
                 nodes.insert({pair, cur});
             } else {
                 cur = nodes[pair];
@@ -37,7 +38,7 @@ RoadGraph::RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std
     tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
     tree_->index->buildIndex();
 
-    for (const Reader::TrafficEntry& entry : traffic_entries) {
+    for (const ReaderUtils::TrafficEntry& entry : traffic_entries) {
         std::size_t prev = static_cast<std::size_t>(-1);
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
             std::size_t cur = static_cast<std::size_t>(-1);
@@ -48,6 +49,7 @@ RoadGraph::RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std
             }
             if (nodes_[cur].name == "") {
                 nodes_[cur].name = entry.road_name;
+                std::transform(nodes_[cur].name.begin(), nodes_[cur].name.end(), nodes_[cur].name.begin(), ::toupper);
             }
             if (prev != static_cast<std::size_t>(-1)) {
                 for (const std::size_t& edge : nodes_[prev].edges) {
@@ -62,9 +64,7 @@ RoadGraph::RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std
     }
     fillMissingTrafficData();
 
-
-
-    for (const Reader::CrashEntry& entry : crash_entries) {
+    for (const ReaderUtils::CrashEntry& entry : crash_entries) {
         addCrashNoRecalc(entry.coordinates, static_cast<double>(entry.vehicles));
     }
     recalculateProbAll();
@@ -74,6 +74,7 @@ std::size_t RoadGraph::insertNode(std::pair<double, double> pos) {
     nodes_.push_back(RoadNode(nodes_.size(), pos));
     return nodes_.size() - 1;
 }
+
 std::size_t RoadGraph::insertNode(std::pair<double, double> pos, std::string name) {
     nodes_.push_back(RoadNode(nodes_.size(), pos, name));
     return nodes_.size() - 1;
@@ -85,6 +86,7 @@ std::size_t RoadGraph::insertEdge(std::size_t node1, std::size_t node2, double l
     nodes_[node2].edges.push_back(edges_.size() - 1);
     return edges_.size() - 1;
 }
+
 std::size_t RoadGraph::insertEdge(std::size_t node1, std::size_t node2, double length, double crashProb) {
     edges_.push_back(RoadNode::RoadEdge(edges_.size(), node1, node2, crashProb, length));
     nodes_[node1].edges.push_back(edges_.size() - 1);
@@ -136,11 +138,11 @@ void RoadGraph::recalculateProbAll() {
     }
 }
 
-std::vector<std::size_t> RoadGraph::BFS(std::pair<double, double> p1, std::pair<double, double> p2) const {
-    return BFS(findNearestNeighbor(p1), findNearestNeighbor(p2));
+std::vector<std::size_t> RoadGraph::BFSPath(std::pair<double, double> p1, std::pair<double, double> p2) const {
+    return BFSPath(findNearestNeighbor(p1), findNearestNeighbor(p2));
 }
 
-std::vector<std::size_t> RoadGraph::BFS(std::size_t id1, std::size_t id2) const {   
+std::vector<std::size_t> RoadGraph::BFSPath(std::size_t id1, std::size_t id2) const {   
     if (id1 == id2) {
         return {id1};
     }
@@ -399,7 +401,7 @@ void RoadGraph::fillMissingTrafficData() {
     }
 }
 
-size_t RoadGraph::findNearestNeighbor(const std::pair<double, double>& coord) const {
+std::size_t RoadGraph::findNearestNeighbor(const std::pair<double, double>& coord) const {
     std::vector<double> coordinates = {coord.first, coord.second};
 
     size_t num_results = 1;
@@ -430,7 +432,26 @@ KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>* RoadGrap
     return tree_;
 }
 
+RoadGraph& RoadGraph::operator=(const RoadGraph& rhs) {
+    if (this == &rhs) {
+        return *this;
+    }
+    nodes_ = rhs.nodes_;
+    edges_ = rhs.edges_;
+    delete tree_;
+    road_entries_vec_ = rhs.road_entries_vec_;
+    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+    tree_->index->buildIndex();
+    return *this;
+}
+
+RoadGraph::RoadGraph(const RoadGraph& other) : nodes_(other.nodes_), edges_(other.edges_), road_entries_vec_(other.road_entries_vec_), tree_(nullptr) {
+    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+    tree_->index->buildIndex();
+}
+
 void RoadGraph::buildTree() {
+    road_entries_vec_.erase(road_entries_vec_.begin(), road_entries_vec_.end());
     for (const RoadNode& node : nodes_) {
         road_entries_vec_.push_back({node.pos.first, node.pos.second});
     }

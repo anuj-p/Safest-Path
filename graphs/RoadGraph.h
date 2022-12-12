@@ -22,7 +22,7 @@ class RoadGraph {
          * @param traffic_entries A list of TrafficEntry objects that store daily driver data for roads in the road network
          * @param crash_entries A list of CrashEntry objects that store crash record for roads in the road network
         */
-        RoadGraph(const std::list<Reader::RoadEntry>& road_entries, const std::list<Reader::TrafficEntry>& traffic_entries, const std::list<Reader::CrashEntry>& crash_entries);
+        RoadGraph(const std::list<ReaderUtils::RoadEntry>& road_entries, const std::list<ReaderUtils::TrafficEntry>& traffic_entries, const std::list<ReaderUtils::CrashEntry>& crash_entries);
        
         /**
          * Inserts RoadNode object into the "nodes_" vector
@@ -140,7 +140,7 @@ class RoadGraph {
          * @param p2 A pair of doubles storing the ending GPS position of the form {longitude, latitude}
          * @return A vector of size_t's storing the positions of the RoadNode's in the "nodes_" vector that makeup the shortest path in terms of number of RoadEdges between the RoadNodes nearest "p1" and "p2"
         */
-        std::vector<std::size_t> BFS(std::pair<double, double> p1, std::pair<double, double> p2) const;
+        std::vector<std::size_t> BFSPath(std::pair<double, double> p1, std::pair<double, double> p2) const;
 
         /**
          * Runs the BFS algorithm to find the shortest path in terms of number of RoadEdges between the RoadNodes "nodes_[node1]" and "nodes_[node2]"
@@ -149,7 +149,7 @@ class RoadGraph {
          * @param node2 A size_t storing the position of the ending RoadNode in the "nodes_" vector
          * @return A vector of size_t's storing the positions of the RoadNode's in the "nodes_" vector that makeup the shortest path in terms of number of RoadEdges between the RoadNodes "nodes_[node1]" and "nodes_[node2]"
         */
-        std::vector<std::size_t> BFS(std::size_t node1, std::size_t node2) const;
+        std::vector<std::size_t> BFSPath(std::size_t node1, std::size_t node2) const;
 
         /**
          * Runs the BFS algorithm on the connected component of RoadNode "nodes_[start]"
@@ -162,7 +162,7 @@ class RoadGraph {
         /**
          * Runs the BFS algorithm on the RoadGraph
          * 
-         * @return A vector of vectors of size_t's storing the positions in the "nodes_" vector of the children of the nth RoadNode in the "nodes_" vector
+         * @return A vector of vectors of size_t's storing the positions of the children in the "nodes_" vector of the nth RoadNode in the "nodes_" vector
         */
         std::vector<std::vector<std::size_t>> BFS() const;
 
@@ -170,7 +170,7 @@ class RoadGraph {
          * Runs the BFS algorithm with starting RoadNode "nodes_[start]"
          * 
          * @param start A size_t storing the position of the starting RoadNode in the "nodes_" vector
-         * @return A vector of vectors of size_t's storing the positions in the "nodes_" vector of the children of the nth RoadNode in the "nodes_" vector
+         * @return A vector of vectors of size_t's storing the positions of the children in the "nodes_" vector of the nth RoadNode in the "nodes_" vector
         */
         std::vector<std::vector<std::size_t>> BFS(std::size_t start) const;
 
@@ -178,7 +178,7 @@ class RoadGraph {
          * Runs the BFS algorithm with starting RoadNode of the RoadNode nearest "p"
          * 
          * @param p A pair of doubles storing the starting GPS position of the form {longitude, latitude}
-         * @return A vector of vectors of size_t's storing the positions in the "nodes_" vector of the children of the nth RoadNode in the "nodes_" vector
+         * @return A vector of vectors of size_t's storing the positions of the children in the "nodes_" vector of the nth RoadNode in the "nodes_" vector
         */
         std::vector<std::vector<std::size_t>> BFS(std::pair<double, double> p) const;
 
@@ -196,7 +196,7 @@ class RoadGraph {
          * @param coord A pair of doubles storing a GPS position of the form {longitude, latitude}
          * @return A size_t storing the position of the nearest RoadNode in the "nodes_" vector to "coord"
         */
-        size_t findNearestNeighbor(const std::pair<double, double>& coord) const;
+        std::size_t findNearestNeighbor(const std::pair<double, double>& coord) const;
 
         /**
          * Gets the nodes vector
@@ -226,9 +226,29 @@ class RoadGraph {
         ~RoadGraph();
 
         /**
-         * @todo Add later
+         * Copy-assigns "rhs" into "*this" RoadGraph
+         * 
+         * @param rhs A RoadGraph to be copy-assigned into "*this"
+         * @return A RoadGraph, "*this"
+        */
+        RoadGraph& operator=(const RoadGraph& rhs);
+
+        /**
+         * Copy constructor
+         * 
+         * @param other A RoadGraph to be copied
+        */
+        RoadGraph(const RoadGraph& other);
+
+        /**
+         * Builds the nanoflan KDTree
         */
         void buildTree();
+
+        /**
+         * For all RoadEdges with a zero driver count, replaces the driver count of the RoadEdge by the average driver counts of all incident edges of the start and end RoadNodes that have nonzero driver counts
+        */
+        void fillMissingTrafficData();
 
     private:
         /**
@@ -254,9 +274,4 @@ class RoadGraph {
          * @param visited A vector of bools storing if the nth RoadNode in the "nodes_" vector has been visited
         */
         void BFSHelper(std::size_t start, std::vector<std::vector<std::size_t>>& bfs, std::vector<bool>& visited) const;
-
-        /**
-         * For all RoadEdges with a zero driver count, replaces the driver count of the RoadEdge by the average driver counts of all incident edges of the start and end RoadNodes that have nonzero driver counts
-        */
-        void fillMissingTrafficData();
 };
