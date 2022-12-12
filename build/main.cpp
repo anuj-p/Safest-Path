@@ -16,14 +16,14 @@ int main(int argc, char *argv[]) {
     std::list<ReaderUtils::RoadEntry> roads;
     RoadGraph graph;
     if (argc == 1) {
-        std::cout << "Reading roads file..." << std::endl;
+        std::cout << "Reading roads file... (~1-3 minutes)" << std::endl;
         roads = std::move(Reader::getRoadEntries("./data/RoadSegment.json"));
-        std::cout << "Creating road graph..." << std::endl;
+        std::cout << "Creating road graph... (~2-4 minutes)" << std::endl;
         graph = std::move(RoadGraph(roads, Reader::getTrafficEntries("./data/Annual_Average_Daily_Traffic_-_2021.geojson"), Reader::getCrashEntries("./data/CRASHES_-_2021.geojson")));
     } else if (argc == 4) {
-        std::cout << "Reading roads file..." << std::endl;
+        std::cout << "Reading roads file... (~1-3 minutes)" << std::endl;
         roads = Reader::getRoadEntries(argv[1]);
-        std::cout << "Creating road graph..." << std::endl;
+        std::cout << "Creating road graph... (~2-4 minutes)" << std::endl;
         graph = RoadGraph(roads, Reader::getTrafficEntries(argv[2]), Reader::getCrashEntries(argv[3]));
     } else {
         throw std::invalid_argument("Invalid number of arguments.");
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     std::size_t startNode = static_cast<std::size_t>(-1);
     std::size_t endNode = static_cast<std::size_t>(-1);
 
-    std::cout << "Would you like to enter road names instead of GPS coordinates? Y/N" << std::endl;
+    std::cout << "Would you like to enter road names instead of GPS coordinates? Y/N *NOTE: MANY ROADS HAVE THE SAME NAME!" << std::endl;
     std::string inputLine = "";
     std::getline(std::cin, inputLine);
     char inputChar;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
         startNode = startIter->second;
         endNode = endIter->second;
     } else if (inputChar == 'N') {        
-        std::cout << "Input starting signed GPS coordinate in the format \"(x, y)\"." << std::endl;
+        std::cout << "Please input the starting signed GPS coordinates in the format \"(x, y)\"." << std::endl;
         std::string startPointString = "";
         std::getline(std::cin, startPointString);
         size_t start = startPointString.find_first_of('(', 0);
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 
         std::pair<double, double> startPoint(std::stod(x_coordinate), std::stod(y_coordinate));
         
-        std::cout << "Input ending signed GPS coordinate in the format \"(x, y)\"." << std::endl;
+        std::cout << "Please input the ending signed GPS coordinates in the format \"(x, y)\"." << std::endl;
         std::string endPointString = "";
         std::getline(std::cin, endPointString);
         start = endPointString.find_first_of('(', 0);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
         throw std::invalid_argument("Invalid input.");
     }
 
-    std::cout << "Please enter output file in the format \"filename.png\"" << std::endl;
+    std::cout << "Please enter output file in the format \"filename.png\"." << std::endl;
     std::getline(std::cin, inputLine);
     std::ofstream outputFile(inputLine);
     if (outputFile.fail()) {
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     }
     outputFile.close();
 
-    std::cout << "Drawing first image..." << std::endl;
+    std::cout << "Drawing road network image... (~1-2 minutes)" << std::endl;
     RoadImage road_image = RoadImage(9411, 13000);
     for (const ReaderUtils::RoadEntry& road : roads) {
         road_image.addPath(road.coordinates_list, {0, 0, 0}, -87.5046, -91.5066, 42.5083, 36.9783, 1000);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     // std::cout << graph.nodes_.size() << std::endl;
     // std::cout << graph.edges_.size() << std::endl;
 
-    std::cout << "Using Dijkstra's..." << std::endl;
+    std::cout << "Using Dijkstra's... (~1-2 minutes)" << std::endl;
 
     // std::size_t s = graph.findNearestNeighbor({-88.221431, 40.109053});
     // std::size_t e = graph.findNearestNeighbor({-87.635296, 41.878967});
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 
     road_image.addBoldPath(path, {255, 0, 0}, -87.5046, -91.5066, 42.5083, 36.9783, 1000);
 
-    std::cout << "Outputting image..." << std::endl;
+    std::cout << "Outputting image... (~1 minute)" << std::endl;
     road_image.toPNG(inputLine);
     
     std::cout << "Would you like to view directions? Y/N" << std::endl;
