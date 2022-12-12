@@ -2,56 +2,55 @@
 #include <fstream>
 #include <optional>
 #include <algorithm>
+#include <stdexcept>
 
-std::list<Reader::RoadEntry> Reader::getRoadEntries() {
-    std::list<Reader::RoadEntry> entries;
-    std::ifstream ifs{"./data/RoadSegment.json"};
+std::list<ReaderUtils::RoadEntry> Reader::getRoadEntries(const std::string& filename) {
+    std::list<ReaderUtils::RoadEntry> entries;
+    std::ifstream ifs{filename};
+    if (ifs.fail()) {
+        throw std::runtime_error("Unable to open " + filename + ".");
+    }
     for (std::string line; std::getline(ifs, line); line = "]}") { // ends on ]}
         std::optional<std::string> name = findString(line, "name", false);
         std::optional<double> length = *findDouble(line, "SHAPE_Leng", false);
         std::optional<std::list<std::pair<double, double>>> coordinates_list = findCoordinatesList(line, "coordinates", 2, false);
         if (name && length && coordinates_list) {
-            Reader::RoadEntry entry;
-            entry.name = *name;
-            entry.length = *length;
-            entry.coordinates_list = *coordinates_list;
-            entries.push_back(entry);
+            entries.push_back(ReaderUtils::RoadEntry(*name, *length, *coordinates_list));
         }
     }
     return entries;
 }
 
-std::list<Reader::TrafficEntry> Reader::getTrafficEntries() {
-    std::list<Reader::TrafficEntry> entries;
-    std::ifstream ifs{"./data/Annual_Average_Daily_Traffic_-_2021.geojson"};
+std::list<ReaderUtils::TrafficEntry> Reader::getTrafficEntries(const std::string& filename) {
+    std::list<ReaderUtils::TrafficEntry> entries;
+    std::ifstream ifs{filename};
+    if (ifs.fail()) {
+        throw std::runtime_error("Unable to open " + filename + ".");
+    }
     for (std::string line; std::getline(ifs, line); line = "") { // ends on new line
         std::optional<std::string> road_name = findString(line, "ROAD_NAME", true);
         std::optional<int> traffic = findInt(line, "AADT", true);
         std::optional<std::list<std::pair<double, double>>> coordinates_list = findCoordinatesList(line, "coordinates", 3, true);
         
         if (road_name && traffic && coordinates_list) {
-            Reader::TrafficEntry entry;
-            entry.road_name = *road_name;
-            entry.traffic = *traffic;
-            entry.coordinates_list = *coordinates_list;
-            entries.push_back(entry);
+            entries.push_back(ReaderUtils::TrafficEntry(*road_name, *traffic, *coordinates_list));
         }
     }
     return entries;
 }
 
-std::list<Reader::CrashEntry> Reader::getCrashEntries() {
-    std::list<Reader::CrashEntry> entries;
-    std::ifstream ifs{"./data/CRASHES_-_2021.geojson"};
+std::list<ReaderUtils::CrashEntry> Reader::getCrashEntries(const std::string& filename) {
+    std::list<ReaderUtils::CrashEntry> entries;
+    std::ifstream ifs{filename};
+    if (ifs.fail()) {
+        throw std::runtime_error("Unable to open " + filename + ".");
+    }
     for (std::string line; std::getline(ifs, line); line = "") { // ends on new line
         std::optional<int> vehicles = findInt(line, "NumberOfVehicles", true); 
         std::optional<double> latitude = findDouble(line, "TSCrashLatitude", true);
         std::optional<double> longitude = findDouble(line, "TSCrashLongitude", true);
         if (vehicles && latitude && longitude) {
-            Reader::CrashEntry entry;
-            entry.vehicles = *vehicles;
-            entry.coordinates = {*longitude, *latitude};
-            entries.push_back(entry);
+            entries.push_back(ReaderUtils::CrashEntry(*vehicles, {*longitude, *latitude}));
         }
     }
     return entries;
