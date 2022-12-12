@@ -7,8 +7,245 @@
 #include <vector>
 #include <iostream>
 #include <queue>
+#include <sstream>
+#include <stdexcept>
+#include <limits>
+#include <fstream>
 
-int main() {
+int main(int argc, char *argv[]) {
+    std::list<ReaderUtils::RoadEntry> roads;
+    RoadGraph graph;
+    if (argc == 1) {
+        std::cout << "Reading roads file..." << std::endl;
+        roads = Reader::getRoadEntries("./data/RoadSegment.json");
+        std::cout << "Creating road graph..." << std::endl;
+        graph = RoadGraph(roads, Reader::getTrafficEntries("./data/Annual_Average_Daily_Traffic_-_2021.geojson"), Reader::getCrashEntries("./data/CRASHES_-_2021.geojson"));
+    } else if (argc == 4) {
+        std::cout << "Reading roads file..." << std::endl;
+        roads = Reader::getRoadEntries(argv[1]);
+        std::cout << "Creating road graph..." << std::endl;
+        graph = RoadGraph(roads, Reader::getTrafficEntries(argv[2]), Reader::getCrashEntries(argv[3]));
+    } else {
+        throw std::invalid_argument("Invalid number of arguments.");
+    }
+
+
+    std::unordered_map<std::string, std::size_t> nameMap;
+    const std::vector<RoadNode>& nodes = graph.getNodes();
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+        nameMap.insert({nodes[i].name, i});
+    }
+    nameMap.erase("");
+
+    std::size_t startNode = static_cast<std::size_t>(-1);
+    std::size_t endNode = static_cast<std::size_t>(-1);
+
+    std::cout << "Would you like to enter road names? (Default is GPS coordinates) Y/N" << std::endl;
+    std::string inputLine = "";
+    std::getline(std::cin, inputLine);
+    char inputChar;
+    std::stringstream(inputLine) >> inputChar;
+    inputChar = std::toupper(inputChar);
+    if (inputChar == 'Y') {
+        std::cout << "Please enter the road names in the format \"\"start_road_name\" \"end_road_name\"\"" << std::endl;
+        std::getline(std::cin, inputLine);
+        if (inputLine == "") {
+            throw std::invalid_argument("Invalid input.");
+        }
+        std::string startRoadName = "";
+        std::string endRoadName = "";
+        std::stringstream inputStream(inputLine);
+
+        inputStream >> startRoadName;
+        if (startRoadName.size() == 0 || startRoadName[0] != '\"') {
+            throw std::invalid_argument("Invalid input.");
+        } else if (startRoadName == "\"") {
+            std::string tempStr = "";
+            inputStream >> tempStr;
+            if (tempStr.size() == 0 || tempStr == "\"") {
+                throw std::invalid_argument("Invalid input.");
+            }
+            startRoadName += tempStr;
+        }
+        while(startRoadName[startRoadName.size() - 1] != '\"') {
+            std::string tempStr = "";
+            inputStream >> tempStr;
+            if (tempStr.size() == 0) {
+                throw std::invalid_argument("Invalid input.");
+            }
+            if (tempStr == "\"") {
+                startRoadName += tempStr;
+            } else {
+                startRoadName = startRoadName + " " + tempStr;
+            }
+        }
+
+        inputStream >> endRoadName;
+        if (endRoadName.size() == 0 || endRoadName[0] != '\"') {
+            throw std::invalid_argument("Invalid input.");
+        } else if (endRoadName == "\"") {
+            std::string tempStr = "";
+            inputStream >> tempStr;
+            if (tempStr.size() == 0 || tempStr == "\"") {
+                throw std::invalid_argument("Invalid input.");
+            }
+            endRoadName += tempStr;
+        }
+        while(endRoadName[endRoadName.size() - 1] != '\"') {
+            std::string tempStr = "";
+            inputStream >> tempStr;
+            if (tempStr.size() == 0) {
+                throw std::invalid_argument("Invalid input.");
+            }
+            if (tempStr == "\"") {
+                endRoadName += tempStr;
+            } else {
+                endRoadName = endRoadName + " " + tempStr;
+            }
+        }
+
+        std::transform(startRoadName.begin(), startRoadName.end(), startRoadName.begin(), ::toupper);
+        std::transform(endRoadName.begin(), endRoadName.end(), endRoadName.begin(), ::toupper);
+        auto startIter = nameMap.find(startRoadName.substr(1, startRoadName.size() - 2));
+        auto endIter = nameMap.find(endRoadName.substr(1, endRoadName.size() - 2));
+        if (startIter == nameMap.cend() || endIter == nameMap.cend()) {
+            throw std::invalid_argument("Invalid input: names not found");
+        }
+
+        startNode = startIter->second;
+        endNode = endIter->second;
+    } else if (inputChar == 'N') {
+        std::cout << "Please enter signed GPS coordinates in the format \"start_longitude start_latitude end_longitude end_latitude\"" << std::endl;
+        std::getline(std::cin, inputLine);
+        double startLongitude = std::numeric_limits<double>::max();
+        double startLatitude = std::numeric_limits<double>::max();
+        double endLongitude = std::numeric_limits<double>::max();
+        double endLatitude = std::numeric_limits<double>::max();
+        std::stringstream(inputLine) >> startLongitude >> startLatitude >> endLongitude >> endLatitude;
+        if (startLongitude == std::numeric_limits<double>::max() || startLatitude == std::numeric_limits<double>::max() || endLongitude == std::numeric_limits<double>::max() || endLatitude == std::numeric_limits<double>::max()) {
+            throw std::invalid_argument("Invalid input.");
+        }
+        startNode = graph.findNearestNeighbor({startLongitude, startLatitude});
+        endNode = graph.findNearestNeighbor({endLongitude, endLatitude});
+    } else {
+        throw std::invalid_argument("Invalid input.");
+    }
+
+    std::cout << "Please enter output file in the format \"filename\"" << std::endl;
+    std::getline(std::cin, inputLine);
+    std::ofstream outputFile(inputLine);
+    if (outputFile.fail()) {
+        throw std::runtime_error("Unable to open " + inputLine + ".");;
+    }
+    outputFile.close();
+
+    std::cout << "Drawing first image..." << std::endl;
+    RoadImage road_image = RoadImage(9411, 13000);
+    for (const ReaderUtils::RoadEntry& road : roads) {
+        road_image.addPath(road.coordinates_list, {0, 0, 0}, -87.5046, -91.5066, 42.5083, 36.9783, 1000);
+    }
+
+    // std::cout << graph.nodes_.size() << std::endl;
+    // std::cout << graph.edges_.size() << std::endl;
+
+    std::cout << "Using Dijkstra's..." << std::endl;
+
+    // std::size_t s = graph.findNearestNeighbor({-88.221431, 40.109053});
+    // std::size_t e = graph.findNearestNeighbor({-87.635296, 41.878967});
+    std::vector<size_t> path_idx = graph.Dijkstra(startNode, endNode);
+    // std::cout << path_idx.size() << std::endl;
+
+    std::list<std::pair<double, double>> path;
+    for (const std::size_t& idx : path_idx) {
+        path.push_back(nodes[idx].pos);
+    }
+
+    road_image.addBoldPath(path, {255, 0, 0}, -87.5046, -91.5066, 42.5083, 36.9783, 1000);
+
+    std::cout << "Outputting image..." << std::endl;
+    road_image.toPNG(inputLine);
+
+    // std::vector<std::vector<std::size_t>> bfs = graph.ComponentBFS(0);
+    // std::queue<std::size_t> queue;
+    // queue.push(0);
+    // std::size_t count = 0;
+    // while (!queue.empty()) {
+    //     std::size_t n = queue.front();
+    //     queue.pop();
+    //     ++count;
+    //     for (const std::size_t& i : bfs[n]) {
+    //         queue.push(i);
+    //     }
+    // }
+    // std::cout << graph.nodes_.size() << " " << count << std::endl;
+
+
+
+
+
+    // RoadGraph rg;
+    // rg.insertNode({0,0});
+    // auto r1 = rg.insertNode({1,0});
+    // auto r2 = rg.insertNode({1,5});
+    // auto r3 = rg.insertNode({0,7});
+    // auto r4 = rg.insertNode({3,8.5});
+    // auto r5 = rg.insertNode({2,10});
+    // auto r6 = rg.insertNode({5,10});
+    // auto r7 = rg.insertNode({4.5, 5});
+    // auto r8 = rg.insertNode({5.3,0});
+    // auto r9 = rg.insertNode({10,10});
+
+    // rg.insertEdge(r1,r2, 1, 0.2);
+    // rg.insertEdge(r2,r3, 1, 0.1);
+    // rg.insertEdge(r3,r4, 1, 0.8);
+    // rg.insertEdge(r4,r5, 1, 0.1);
+    // rg.insertEdge(r5,r6, 1, 0.3);
+    // rg.insertEdge(r6,r7, 1, 0.7);
+    // rg.insertEdge(r7,r8, 1, 0.4);
+    // rg.insertEdge(r8,r9, 1, 0.9);
+    // rg.insertEdge(r1,r8, 1, 0.7);
+    // rg.insertEdge(r1,r7, 1, 0.3);
+    // rg.insertEdge(r2,r7, 1, 0.5);
+    // rg.insertEdge(r3,r7, 1, 0.6);
+    // rg.insertEdge(r4,r7, 1, 0);
+    // rg.insertEdge(r4,r6, 1, 0.5);
+
+    // for (const RoadNode& node : rg.nodes_) {
+    //     rg.road_entries_vec_.push_back({node.pos.first, node.pos.second});
+    // }
+    // rg.tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, rg.road_entries_vec_, 10);
+    // rg.tree_->index->buildIndex();
+
+    // RoadImage road_image = RoadImage(400, 400);
+    // for (std::size_t i = 0; i < rg.getNodes().size(); ++i) {
+    //     for (const auto& neigbor : rg.getNeighbors(i)) {
+    //         std::list<std::pair<double, double>> path;
+    //         path.push_back(rg.getNodes()[i].pos);
+    //         path.push_back(rg.getNodes()[neigbor].pos);
+    //         road_image.addPath(path, {0, 0, 0}, 10, 0, 10, 0, 110);
+    //     }
+    // }
+
+    // std::vector<std::vector<std::size_t>> bfs = rg.BFS(1);
+    // for (std::size_t i = 0; i < rg.getNodes().size(); ++i) {
+    //     for (const auto& neigbor : bfs[i]) {
+    //         std::list<std::pair<double, double>> path;
+    //         path.push_back(rg.getNodes()[i].pos);
+    //         path.push_back(rg.getNodes()[neigbor].pos);
+    //         road_image.addBoldPath(path, {255, 0, 0}, 10, 0, 10, 0, 110);
+    //     }
+    // }
+
+    // std::cout << "Outputting image..." << std::endl;
+    // road_image.toPNG("new_il.png");
+
+
+
+
+
+
+
+
     // std::string startPointString = "";
     // std::pair<double, double> startPoint;
     // std::cout << "Input starting point. Use format: (x, y)" << std::endl;
@@ -51,15 +288,14 @@ int main() {
     // std::cout << x_end << std::endl;
     // std::cout << y_end << std::endl;
 
+    // std::cout << "Reading roads file..." << std::endl;
+    // std::list<Reader::RoadEntry> roads = Reader::getRoadEntries();    
 
-    std::cout << "Reading roads file..." << std::endl;
-    std::list<Reader::RoadEntry> roads = Reader::getRoadEntries();    
+    // std::cout << "Creating road graph..." << std::endl;
+    // RoadGraph graph = RoadGraph(roads, Reader::getTrafficEntries(), Reader::getCrashEntries());
 
-    std::cout << "Creating road graph..." << std::endl;
-    RoadGraph graph = RoadGraph(roads, Reader::getTrafficEntries(), Reader::getCrashEntries());
-
-    std::cout << "Finding nearest neighbor 1..." << std::endl;
-    size_t start_node = graph.findNearestNeighbor({-90.0, 40.0});
+    // std::cout << "Finding nearest neighbor 1..." << std::endl;
+    // size_t start_node = graph.findNearestNeighbor({-90.0, 40.0});
 
     // std::cout << "Finding nearest neighbor 2..." << std::endl;
     // size_t end_node = graph.findNearestNeighbor({x_end, y_end});
