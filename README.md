@@ -4,7 +4,7 @@
 Safest Path is a program that determines the route with minimum crash risk between two points in a given road network. The program is currently set up to take the public road network of Illinois using publicly available road, traffic, and crash data from the Illinois Department of Transportation. A video presentation of this project is available [here](https://drive.google.com/file/d/1FroIueaUP0PKV_-mkb2YUuGaAHLHFwOq/view?usp=share_link).
 
 ## Installation
-Download these files from [here](https://drive.google.com/drive/folders/1WS6gePORfkNFFUgHZT6UJieiOhNokvcF?usp=share_link ) and place them into the `data` folder (these files are too large for GitHub to host for free). Alternatively, place the files where you please and note their addresses.
+Download these files from [here](https://drive.google.com/drive/folders/1WS6gePORfkNFFUgHZT6UJieiOhNokvcF?usp=share_link) and place them into the `data` folder (these files are too large for GitHub to host for free). Alternatively, place the files where you please and note their addresses.
 
 ## Usage
 ### Initalization and setup
