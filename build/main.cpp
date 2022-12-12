@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     std::stringstream(inputLine) >> inputChar;
     inputChar = std::toupper(inputChar);
     if (inputChar == 'Y') {
-        std::cout << "Please enter the starting road name." << std::endl;
+        std::cout << "Please enter the starting road name. (i.e. \"S LOCUST ST\")" << std::endl;
         std::string  startRoadName= "";
         std::getline(std::cin, startRoadName);
         if (startRoadName == "") {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument("Invalid input: names not found");
         }
 
-        std::cout << "Please enter the ending road name." << std::endl;
+        std::cout << "Please enter the ending road name. (i.e. \"S LOCUST ST\")" << std::endl;
         std::string endRoadName = "";
         std::getline(std::cin, endRoadName);
         if (endRoadName == "") {
