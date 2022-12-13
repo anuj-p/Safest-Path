@@ -4,12 +4,8 @@
 #include "../graphs/nanoflann.hpp"
 #include "../graphs/KDTreeVectorOfVectorsAdaptor.h"
 
-#include <vector>
 #include <iostream>
-#include <queue>
 #include <sstream>
-#include <stdexcept>
-#include <limits>
 #include <fstream>
 
 int main(int argc, char *argv[]) {
