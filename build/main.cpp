@@ -17,9 +17,9 @@ int main(int argc, char *argv[]) {
     RoadGraph graph;
     if (argc == 1) {
         std::cout << "Reading roads file..." << std::endl;
-        roads = Reader::getRoadEntries("./data/RoadSegment.json");
+        roads = std::move(Reader::getRoadEntries("./data/RoadSegment.json"));
         std::cout << "Creating road graph..." << std::endl;
-        graph = RoadGraph(roads, Reader::getTrafficEntries("./data/Annual_Average_Daily_Traffic_-_2021.geojson"), Reader::getCrashEntries("./data/CRASHES_-_2021.geojson"));
+        graph = std::move(RoadGraph(roads, Reader::getTrafficEntries("./data/Annual_Average_Daily_Traffic_-_2021.geojson"), Reader::getCrashEntries("./data/CRASHES_-_2021.geojson")));
     } else if (argc == 4) {
         std::cout << "Reading roads file..." << std::endl;
         roads = Reader::getRoadEntries(argv[1]);
@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
     } else {
         throw std::invalid_argument("Invalid number of arguments.");
     }
-
 
     std::unordered_map<std::string, std::size_t> nameMap;
     const std::vector<RoadNode>& nodes = graph.getNodes();
@@ -40,98 +39,99 @@ int main(int argc, char *argv[]) {
     std::size_t startNode = static_cast<std::size_t>(-1);
     std::size_t endNode = static_cast<std::size_t>(-1);
 
-    std::cout << "Would you like to enter road names? (Default is GPS coordinates) Y/N" << std::endl;
+    std::cout << "Would you like to enter road names instead of GPS coordinates? Y/N" << std::endl;
     std::string inputLine = "";
     std::getline(std::cin, inputLine);
     char inputChar;
     std::stringstream(inputLine) >> inputChar;
     inputChar = std::toupper(inputChar);
     if (inputChar == 'Y') {
-        std::cout << "Please enter the road names in the format \"\"start_road_name\" \"end_road_name\"\"" << std::endl;
-        std::getline(std::cin, inputLine);
-        if (inputLine == "") {
+        std::cout << "Please enter the starting road name." << std::endl;
+        std::string  startRoadName= "";
+        std::getline(std::cin, startRoadName);
+        if (startRoadName == "") {
             throw std::invalid_argument("Invalid input.");
-        }
-        std::string startRoadName = "";
-        std::string endRoadName = "";
-        std::stringstream inputStream(inputLine);
-
-        inputStream >> startRoadName;
-        if (startRoadName.size() == 0 || startRoadName[0] != '\"') {
-            throw std::invalid_argument("Invalid input.");
-        } else if (startRoadName == "\"") {
-            std::string tempStr = "";
-            inputStream >> tempStr;
-            if (tempStr.size() == 0 || tempStr == "\"") {
-                throw std::invalid_argument("Invalid input.");
-            }
-            startRoadName += tempStr;
-        }
-        while(startRoadName[startRoadName.size() - 1] != '\"') {
-            std::string tempStr = "";
-            inputStream >> tempStr;
-            if (tempStr.size() == 0) {
-                throw std::invalid_argument("Invalid input.");
-            }
-            if (tempStr == "\"") {
-                startRoadName += tempStr;
-            } else {
-                startRoadName = startRoadName + " " + tempStr;
-            }
-        }
-
-        inputStream >> endRoadName;
-        if (endRoadName.size() == 0 || endRoadName[0] != '\"') {
-            throw std::invalid_argument("Invalid input.");
-        } else if (endRoadName == "\"") {
-            std::string tempStr = "";
-            inputStream >> tempStr;
-            if (tempStr.size() == 0 || tempStr == "\"") {
-                throw std::invalid_argument("Invalid input.");
-            }
-            endRoadName += tempStr;
-        }
-        while(endRoadName[endRoadName.size() - 1] != '\"') {
-            std::string tempStr = "";
-            inputStream >> tempStr;
-            if (tempStr.size() == 0) {
-                throw std::invalid_argument("Invalid input.");
-            }
-            if (tempStr == "\"") {
-                endRoadName += tempStr;
-            } else {
-                endRoadName = endRoadName + " " + tempStr;
-            }
         }
 
         std::transform(startRoadName.begin(), startRoadName.end(), startRoadName.begin(), ::toupper);
+        auto startIter = nameMap.find(startRoadName);
+        if (startIter == nameMap.cend()) {
+            throw std::invalid_argument("Invalid input: names not found");
+        }
+
+        std::cout << "Please enter the ending road name." << std::endl;
+        std::string endRoadName = "";
+        std::getline(std::cin, endRoadName);
+        if (endRoadName == "") {
+            throw std::invalid_argument("Invalid input.");
+        }
+
         std::transform(endRoadName.begin(), endRoadName.end(), endRoadName.begin(), ::toupper);
-        auto startIter = nameMap.find(startRoadName.substr(1, startRoadName.size() - 2));
-        auto endIter = nameMap.find(endRoadName.substr(1, endRoadName.size() - 2));
-        if (startIter == nameMap.cend() || endIter == nameMap.cend()) {
+        auto endIter = nameMap.find(endRoadName);
+        if (endIter == nameMap.cend()) {
             throw std::invalid_argument("Invalid input: names not found");
         }
 
         startNode = startIter->second;
         endNode = endIter->second;
-    } else if (inputChar == 'N') {
-        std::cout << "Please enter signed GPS coordinates in the format \"start_longitude start_latitude end_longitude end_latitude\"" << std::endl;
-        std::getline(std::cin, inputLine);
-        double startLongitude = std::numeric_limits<double>::max();
-        double startLatitude = std::numeric_limits<double>::max();
-        double endLongitude = std::numeric_limits<double>::max();
-        double endLatitude = std::numeric_limits<double>::max();
-        std::stringstream(inputLine) >> startLongitude >> startLatitude >> endLongitude >> endLatitude;
-        if (startLongitude == std::numeric_limits<double>::max() || startLatitude == std::numeric_limits<double>::max() || endLongitude == std::numeric_limits<double>::max() || endLatitude == std::numeric_limits<double>::max()) {
+    } else if (inputChar == 'N') {        
+        std::cout << "Input starting signed GPS coordinate in the format \"(x, y)\"." << std::endl;
+        std::string startPointString = "";
+        std::getline(std::cin, startPointString);
+        size_t start = startPointString.find_first_of('(', 0);
+        size_t mid = startPointString.find_first_of(',', 0);
+        if (start == static_cast<std::size_t>(-1)|| mid == static_cast<std::size_t>(-1)) {
             throw std::invalid_argument("Invalid input.");
         }
-        startNode = graph.findNearestNeighbor({startLongitude, startLatitude});
-        endNode = graph.findNearestNeighbor({endLongitude, endLatitude});
+        size_t end = startPointString.find_first_of(')', mid);
+        if (end == static_cast<std::size_t>(-1)) {
+            throw std::invalid_argument("Invalid input.");
+        }
+        std::string x_coordinate = startPointString.substr(start + 1, mid - start - 1);
+        if (end <= start || mid <= start || end <= mid) {
+            throw std::invalid_argument("Invalid input.");
+        }
+        x_coordinate.erase(x_coordinate.find_last_not_of(' ')+1);
+        x_coordinate.erase(0, x_coordinate.find_first_not_of(' '));
+
+        std::string y_coordinate = startPointString.substr(mid + 1, end - mid - 1);
+        y_coordinate.erase(y_coordinate.find_last_not_of(' ')+1);
+        y_coordinate.erase(0, y_coordinate.find_first_not_of(' '));
+
+        std::pair<double, double> startPoint(std::stod(x_coordinate), std::stod(y_coordinate));
+        
+        std::cout << "Input ending signed GPS coordinate in the format \"(x, y)\"." << std::endl;
+        std::string endPointString = "";
+        std::getline(std::cin, endPointString);
+        start = endPointString.find_first_of('(', 0);
+        mid = endPointString.find_first_of(',', 0);
+        if (start == static_cast<std::size_t>(-1) || mid == static_cast<std::size_t>(-1)) {
+            throw std::invalid_argument("Invalid input.");
+        }
+        end = endPointString.find_first_of(')', mid);
+        if (end == static_cast<std::size_t>(-1)) {
+            throw std::invalid_argument("Invalid input.");
+        }
+        if (end <= start || mid <= start || end <= mid) {
+            throw std::invalid_argument("Invalid input.");
+        }
+        x_coordinate = endPointString.substr(start + 1, mid - start - 1);
+        x_coordinate.erase(x_coordinate.find_last_not_of(' ')+1);
+        x_coordinate.erase(0, x_coordinate.find_first_not_of(' '));
+
+        y_coordinate = endPointString.substr(mid + 1, end - mid - 1);
+        y_coordinate.erase(y_coordinate.find_last_not_of(' ')+1);
+        y_coordinate.erase(0, y_coordinate.find_first_not_of(' '));
+
+        std::pair<double, double> endPoint(std::stod(x_coordinate), std::stod(y_coordinate));    
+
+        startNode = graph.findNearestNeighbor(startPoint);
+        endNode = graph.findNearestNeighbor(endPoint);
     } else {
         throw std::invalid_argument("Invalid input.");
     }
 
-    std::cout << "Please enter output file in the format \"filename\"" << std::endl;
+    std::cout << "Please enter output file in the format \"filename.png\"" << std::endl;
     std::getline(std::cin, inputLine);
     std::ofstream outputFile(inputLine);
     if (outputFile.fail()) {
@@ -246,41 +246,6 @@ int main(int argc, char *argv[]) {
 
 
 
-    // std::string startPointString = "";
-    // std::pair<double, double> startPoint;
-    // std::cout << "Input starting point. Use format: (x, y)" << std::endl;
-    // std::getline(std::cin, startPointString);
-    // size_t start = startPointString.find_first_of('(', 0);
-    // size_t mid = startPointString.find_first_of(',', 0);
-    // size_t end = startPointString.find_first_of(')', mid);
-    // std::string x_coordinate = startPointString.substr(start + 1, mid - start - 1);
-    // x_coordinate.erase(x_coordinate.find_last_not_of(' ')+1);
-    // x_coordinate.erase(0, x_coordinate.find_first_not_of(' '));
-
-    // std::string y_coordinate = startPointString.substr(mid + 1, end - mid - 1);
-    // y_coordinate.erase(y_coordinate.find_last_not_of(' ')+1);
-    // y_coordinate.erase(0, y_coordinate.find_first_not_of(' '));
-
-    // double x_start = std::stod(x_coordinate);
-    // double y_start = std::stod(y_coordinate);
-
-    // std::string endPointString = "";
-    // std::pair<double, double> endPoint;
-    // std::cout << "Input end point. Use format: (x, y)" << std::endl;
-    // std::getline(std::cin, endPointString);
-    // start = endPointString.find_first_of('(', 0);
-    // mid = endPointString.find_first_of(',', 0);
-    // end = endPointString.find_first_of(')', mid);
-    // x_coordinate = endPointString.substr(start + 1, mid - start - 1);
-    // x_coordinate.erase(x_coordinate.find_last_not_of(' ')+1);
-    // x_coordinate.erase(0, x_coordinate.find_first_not_of(' '));
-
-    // y_coordinate = endPointString.substr(mid + 1, end - mid - 1);
-    // y_coordinate.erase(y_coordinate.find_last_not_of(' ')+1);
-    // y_coordinate.erase(0, y_coordinate.find_first_not_of(' '));
-
-    // double x_end = std::stod(x_coordinate);
-    // double y_end = std::stod(y_coordinate);
     
     // std::cout << x_start << std::endl;
     // std::cout << y_start << std::endl;
