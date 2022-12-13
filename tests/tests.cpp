@@ -256,7 +256,7 @@ void GraphTests() {
     rg.insertEdge(r3,r7, 1, 0.6);
     rg.insertEdge(r4,r7, 1, 0);
     rg.insertEdge(r4,r6, 1, 0.5);
-    
+
     if (rg.getNodes().size() != 10) throw std::runtime_error("insertNode did not insert all nodes into graph");
     if (rg.getEdges().size() != 14) throw std::runtime_error("insertEdge did not insert all edges into graph");
     if (!(rg.getNodes().at(0).pos.first == 0 && rg.getNodes().at(0).pos.second == 0)) throw std::runtime_error("graph has incorrect node position value");
