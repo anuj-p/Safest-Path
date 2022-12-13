@@ -1,7 +1,7 @@
 #include "image.h"
 #include "lodepng.h"
 
-#include <algorithm>
+#include <tuple>
 #include <fstream>
 
 Image::Image(const size_t& width, const size_t& height) : width_(width), height_(height) {

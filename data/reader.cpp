@@ -1,8 +1,7 @@
 #include "reader.h"
+
 #include <fstream>
-#include <optional>
 #include <algorithm>
-#include <stdexcept>
 
 std::list<ReaderUtils::RoadEntry> Reader::getRoadEntries(const std::string& filename) {
     std::list<ReaderUtils::RoadEntry> entries;
@@ -56,7 +55,7 @@ std::list<ReaderUtils::CrashEntry> Reader::getCrashEntries(const std::string& fi
     return entries;
 }
 
-std::optional<std::string> Reader::findString(std::string line, std::string parameter, bool space) {
+std::optional<std::string> Reader::findString(const std::string& line, const std::string& parameter, bool space) {
     size_t start_idx = line.find(parameter);
     if (start_idx == std::string::npos) return std::nullopt;
     while (line.substr(start_idx + parameter.length(), 2) != "\":") {
@@ -74,7 +73,7 @@ std::optional<std::string> Reader::findString(std::string line, std::string para
     return result;
 }
 
-std::optional<int> Reader::findInt(std::string line, std::string parameter, bool space) {
+std::optional<int> Reader::findInt(const std::string& line, const std::string& parameter, bool space) {
     size_t start_idx = line.find(parameter);
     if (start_idx == std::string::npos) return std::nullopt;
     while (line.substr(start_idx + parameter.length(), 2) != "\":") {
@@ -91,7 +90,7 @@ std::optional<int> Reader::findInt(std::string line, std::string parameter, bool
     return stoi(result);
 }
 
-std::optional<double> Reader::findDouble(std::string line, std::string parameter, bool space) {
+std::optional<double> Reader::findDouble(const std::string& line, const std::string& parameter, bool space) {
     size_t start_idx = line.find(parameter);
     if (start_idx == std::string::npos) return std::nullopt;
     while (line.substr(start_idx + parameter.length(), 2) != "\":") {
@@ -108,7 +107,7 @@ std::optional<double> Reader::findDouble(std::string line, std::string parameter
     return stod(result);
 }
 
-std::optional<std::list<std::pair<double, double>>> Reader::findCoordinatesList(std::string line, std::string parameter, unsigned int dim, bool space) {
+std::optional<std::list<std::pair<double, double>>> Reader::findCoordinatesList(const std::string& line, const std::string& parameter, unsigned int dim, bool space) {
     size_t start_idx = line.find(parameter);
     if (start_idx == std::string::npos) return std::nullopt;
     while (line.substr(start_idx + parameter.length(), 2) != "\":") {

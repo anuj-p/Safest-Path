@@ -1,6 +1,6 @@
 #include "RoadImage.h"
 
-#include <list>
+#include <tuple>
 #include <cmath>
 
 RoadImage::RoadImage(const std::size_t& width, const std::size_t& height) : image_(Image(width, height)), width_(width), height_(height) {}

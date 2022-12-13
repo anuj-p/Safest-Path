@@ -11,7 +11,7 @@
 class RoadGraph {
     public:
         /**
-         * Defaulted empty constuctor for RoadGraph
+         * Empty constuctor for RoadGraph
         */
         RoadGraph();
 
@@ -98,8 +98,6 @@ class RoadGraph {
          * @return A size_t storing the position of the RoadEdge in the "edges_" vector
         */
         std::size_t recalculateProb(std::size_t id, double constantFactor, double lengthFactor, double driverFactor);
-
-        std::pair<std::vector<double>, std::vector<std::size_t>> PrimMST(std::pair<double, double> p) const;
 
         /**
          * Runs Dijkstra's algorithm to find the safest path between RoadNodes "nodes_[start]" and "nodes_[end]"
@@ -236,7 +234,7 @@ class RoadGraph {
         /**
          * Copy constructor
          * 
-         * @param other A RoadGraph to be copied
+         * @param other A RoadGraph to be copy-constructed
         */
         RoadGraph(const RoadGraph& other);
 
@@ -249,6 +247,21 @@ class RoadGraph {
          * For all RoadEdges with a zero driver count, replaces the driver count of the RoadEdge by the average driver counts of all incident edges of the start and end RoadNodes that have nonzero driver counts
         */
         void fillMissingTrafficData();
+
+        /**
+         * Move-assigns "rhs" into "*this" RoadGraph
+         * 
+         * @param rhs A RoadGraph to be move-assigned into "*this"
+         * @return A RoadGraph, "*this"
+        */
+        RoadGraph& operator=(RoadGraph&& rhs);
+
+        /**
+         * Move constructor
+         * 
+         * @param other A RoadGraph to be move-constructed
+        */
+        RoadGraph(RoadGraph&& other);
 
     private:
         /**

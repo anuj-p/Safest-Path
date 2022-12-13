@@ -1,8 +1,5 @@
 #pragma once
 
-#include <tuple>
-#include <string>
-
 /**
  * Image class
 */

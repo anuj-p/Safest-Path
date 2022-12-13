@@ -3,8 +3,6 @@
 #include "../graphs/RoadGraph.h"
 
 #include <iostream>
-#include <stdexcept>
-#include <list>
 
 void ImageTests() {
     std::cout << "-> [Test Image Initilization]" << std::endl;
@@ -256,9 +254,10 @@ void GraphTests() {
     rg.insertEdge(r3,r7, 1, 0.6);
     rg.insertEdge(r4,r7, 1, 0);
     rg.insertEdge(r4,r6, 1, 0.5);
-    
+    rg.insertEdge(r6,r9, 1, 0.1);
+
     if (rg.getNodes().size() != 10) throw std::runtime_error("insertNode did not insert all nodes into graph");
-    if (rg.getEdges().size() != 14) throw std::runtime_error("insertEdge did not insert all edges into graph");
+    if (rg.getEdges().size() != 15) throw std::runtime_error("insertEdge did not insert all edges into graph");
     if (!(rg.getNodes().at(0).pos.first == 0 && rg.getNodes().at(0).pos.second == 0)) throw std::runtime_error("graph has incorrect node position value");
     if (!(rg.getNodes().at(3).pos.first == 0 && rg.getNodes().at(3).pos.second == 7)) throw std::runtime_error("graph has incorrect node position value");
     if (!(rg.getNodes().at(7).pos.first == 4.5 && rg.getNodes().at(7).pos.second == 5)) throw std::runtime_error("graph has incorrect node position value");
@@ -273,6 +272,15 @@ void GraphTests() {
     if (shortestPath4To7.size() != 2) throw std::runtime_error("Dijkstra path incorrect length");
     if (shortestPath4To7[0] != 4) throw std::runtime_error("Dijkstra path incorrect nodes");
     if (shortestPath4To7[1] != 7) throw std::runtime_error("Dijkstra path incorrect nodes");
+
+    std::vector<std::size_t> shortestPath1To9 = rg.Dijkstra(r1, r9);
+    if (shortestPath1To9.size() != 6) throw std::runtime_error("Dijkstra path incorrect length");
+    if (shortestPath1To9[0] != 1) throw std::runtime_error("Dijkstra path incorrect nodes");
+    if (shortestPath1To9[1] != 7) throw std::runtime_error("Dijkstra path incorrect nodes");
+    if (shortestPath1To9[2] != 4) throw std::runtime_error("Dijkstra path incorrect nodes");
+    if (shortestPath1To9[3] != 5) throw std::runtime_error("Dijkstra path incorrect nodes");
+    if (shortestPath1To9[4] != 6) throw std::runtime_error("Dijkstra path incorrect nodes");
+    if (shortestPath1To9[5] != 9) throw std::runtime_error("Dijkstra path incorrect nodes");
 
     std::cout << "-> [Testing BFSPath()]" << std::endl;
 
@@ -308,8 +316,12 @@ void GraphTests() {
     rg.buildTree();
     std::size_t id4 = rg.findNearestNeighbor(rg.getNodes().at(r4).pos);
     std::size_t id7 = rg.findNearestNeighbor(rg.getNodes().at(r7).pos);
+    std::size_t id2 = rg.findNearestNeighbor({0, 5});
+    std::size_t id9 = rg.findNearestNeighbor({100, 100});
     if (id4 != 4) throw std::runtime_error("wrong nearest node");
     if (id7 != 7) throw std::runtime_error("wrong nearest node");
+    if (id2 != 2) throw std::runtime_error("wrong nearest node");
+    if (id9 != 9) throw std::runtime_error("wrong nearest node");
 }
 
 int main() {

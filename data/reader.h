@@ -6,9 +6,6 @@
 #include "utils.h"
 
 #include <optional>
-#include <string>
-#include <list>
-#include <tuple>
 
 /**
  * Reader class
@@ -48,7 +45,7 @@ class Reader {
          * @param space A bool indicating if there is spacing in the dataset that needs to be adjusted for
          * @return An optional of string that stores the string of interest
         */
-        static std::optional<std::string> findString(std::string line, std::string parameter, bool space);
+        static std::optional<std::string> findString(const std::string& line, const std::string& parameter, bool space);
 
         /**
          * A static function that finds the JSON int data corresponding to key "parameter" in "line"
@@ -58,7 +55,7 @@ class Reader {
          * @param space A bool indicating if there is spacing in the dataset that needs to be adjusted for
          * @return An optional of int that stores the integer of interest
         */
-        static std::optional<int> findInt(std::string line, std::string parameter, bool space);
+        static std::optional<int> findInt(const std::string& line, const std::string& parameter, bool space);
 
         /**
          * A static function that finds the JSON double data corresponding to key "parameter" in "line"
@@ -68,7 +65,7 @@ class Reader {
          * @param space A bool indicating if there is spacing in the dataset that needs to be adjusted for
          * @return An optional of double that stores the float of interest
         */
-        static std::optional<double> findDouble(std::string line, std::string parameter, bool space);
+        static std::optional<double> findDouble(const std::string& line, const std::string& parameter, bool space);
 
         /**
          * A static function that finds the JSON coordinates data corresponding to key "parameter" in "line"
@@ -78,5 +75,5 @@ class Reader {
          * @param space A bool indicating if there is spacing in the dataset that needs to be adjusted for
          * @return An optional of list of pairs od doubles that stores the singed GPS coordinates of interest in format {longitude, latitude}
         */
-        static std::optional<std::list<std::pair<double, double>>> findCoordinatesList(std::string line, std::string parameter, unsigned int dim, bool space);
+        static std::optional<std::list<std::pair<double, double>>> findCoordinatesList(const std::string& line, const std::string& parameter, unsigned int dim, bool space);
 };

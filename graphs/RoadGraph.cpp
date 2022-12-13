@@ -1,9 +1,9 @@
 #include "RoadGraph.h"
 
 #include <map>
+#include <unordered_map>
 #include <queue>
-#include <set>
-#include <cmath>
+#include <unordered_set>
 
 RoadGraph::RoadGraph() : nodes_(), edges_(), road_entries_vec_(), tree_(nullptr) {}
 
@@ -16,8 +16,11 @@ RoadGraph::RoadGraph(const std::list<ReaderUtils::RoadEntry>& road_entries, cons
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
             std::size_t cur = static_cast<std::size_t>(-1);
             if (nodes.find(pair) == nodes.end()) {
-                cur = insertNode(pair, entry.name);
-                std::transform(nodes_[cur].name.begin(), nodes_[cur].name.end(), nodes_[cur].name.begin(), ::toupper);
+                std::string name = entry.name;
+                name.erase(name.find_last_not_of(' ')+1);
+                name.erase(0, name.find_first_not_of(' '));
+                std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+                cur = insertNode(pair, name);
                 nodes.insert({pair, cur});
             } else {
                 cur = nodes[pair];
@@ -48,8 +51,11 @@ RoadGraph::RoadGraph(const std::list<ReaderUtils::RoadEntry>& road_entries, cons
                 cur = findNearestNeighbor(pair);
             }
             if (nodes_[cur].name == "") {
-                nodes_[cur].name = entry.road_name;
-                std::transform(nodes_[cur].name.begin(), nodes_[cur].name.end(), nodes_[cur].name.begin(), ::toupper);
+                std::string name = entry.road_name;
+                name.erase(name.find_last_not_of(' ')+1);
+                name.erase(0, name.find_first_not_of(' '));
+                std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+                nodes_[cur].name = name;
             }
             if (prev != static_cast<std::size_t>(-1)) {
                 for (const std::size_t& edge : nodes_[prev].edges) {
@@ -99,7 +105,7 @@ std::size_t RoadGraph::addCrash(std::pair<double, double> pos, double numCrashes
     numCrashes /= nodes_[id].edges.size();
     for (std::size_t edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
-        recalculateProb(edge, 0.00000001, 0.00000001, 0);
+        recalculateProb(edge, 0, 0.00000000001, 0);
     }
     return id;
 }
@@ -134,7 +140,7 @@ std::size_t RoadGraph::recalculateProb(std::size_t id, double constantFactor, do
 
 void RoadGraph::recalculateProbAll() {
     for (std::size_t i = 0; i < edges_.size(); ++i) {
-        recalculateProb(i, 0.00000001, 0.00000001, 0);
+        recalculateProb(i, 0, 0.00000000001, 0);
     }
 }
 
@@ -147,8 +153,8 @@ std::vector<std::size_t> RoadGraph::BFSPath(std::size_t id1, std::size_t id2) co
         return {id1};
     }
     std::queue<std::size_t> q;
-    std::set<std::size_t> visited;
-    std::map<std::size_t, std::size_t> prev_map;
+    std::unordered_set<std::size_t> visited;
+    std::unordered_map<std::size_t, std::size_t> prev_map;
     bool isConnected = false;
     q.push(id1);
     visited.insert(id1);
@@ -194,42 +200,6 @@ std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id) const {
         }
     }
     return to_return;
-}
-
-std::pair<std::vector<double>, std::vector<std::size_t>> RoadGraph::PrimMST(std::pair<double, double> p) const {
-    std::size_t start = findNearestNeighbor(p);
-    std::vector<double> dist(nodes_.size(), 2);
-    std::vector<std::size_t> prev(nodes_.size(), static_cast<std::size_t>(-1));
-    std::priority_queue<std::pair<double, size_t>> queue;
-    std::vector<bool> visited(nodes_.size(), false);
-
-    for (const RoadNode& node : nodes_) {
-        queue.push({-2.0, node.id});
-    }
-    dist[start] = 0;
-    queue.push({0, start});
-
-    while (!queue.empty()) {
-        std::size_t curr = queue.top().second;
-        queue.pop();
-        visited[curr] = true;
-        for (const std::size_t& edge : nodes_[curr].edges) {
-            std::size_t neighbor = curr == edges_[edge].end ? edges_[edge].start : edges_[edge].end;
-            if (!visited[neighbor]) {
-                if (1-(1-dist[curr])*(1-edges_[edge].crashProb) < dist[neighbor]) {
-                    dist[neighbor] = 1-(1-dist[curr])*(1-edges_[edge].crashProb);
-                    queue.push({-1*dist[neighbor], neighbor});
-                    prev[neighbor] = curr;
-                }
-            }
-        }
-    }
-    for (const RoadNode& node : nodes_) {
-        if (dist[node.id] > 1) {
-            dist[node.id] = 1;
-        }
-    }
-    return std::make_pair(dist, prev);
 }
 
 std::pair<std::vector<double>, std::vector<std::size_t>> RoadGraph::DijkstraTree(std::size_t start, std::size_t end) const {
@@ -445,8 +415,7 @@ RoadGraph& RoadGraph::operator=(const RoadGraph& rhs) {
     return *this;
 }
 
-RoadGraph::RoadGraph(const RoadGraph& other) : nodes_(other.nodes_), edges_(other.edges_), road_entries_vec_(other.road_entries_vec_), tree_(nullptr) {
-    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+RoadGraph::RoadGraph(const RoadGraph& other) : nodes_(other.nodes_), edges_(other.edges_), road_entries_vec_(other.road_entries_vec_), tree_(new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10)) {
     tree_->index->buildIndex();
 }
 
@@ -457,4 +426,21 @@ void RoadGraph::buildTree() {
     }
     tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
     tree_->index->buildIndex();
+}
+
+RoadGraph& RoadGraph::operator=(RoadGraph&& rhs) {
+    if (this == &rhs) {
+        return *this;
+    }
+    nodes_ = std::move(rhs.nodes_);
+    edges_ = std::move(rhs.edges_);
+    delete tree_;
+    road_entries_vec_ = std::move(rhs.road_entries_vec_);
+    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+    tree_->index->buildIndex();
+    return *this;
+}
+
+RoadGraph::RoadGraph(RoadGraph&& other) : nodes_(std::move(other.nodes_)), edges_(std::move(other.edges_)), road_entries_vec_(std::move(other.road_entries_vec_)), tree_(new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10)) {
+    tree_->index->buildIndex(); 
 }
