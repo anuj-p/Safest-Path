@@ -3,8 +3,6 @@
 #include "image.h"
 #include "../data/reader.h"
 
-#include <list>
-
 /**
  * RoadImage class
 */
