@@ -36,7 +36,7 @@ class RoadNode {
                 /**
                  * Defaulted empty constructor for RoadEdge
                 */
-                RoadEdge();
+                RoadEdge() = default;
 
                 /**
                  * Constructor for RoadEdge with a RoadEgde id of "argId"
@@ -74,6 +74,26 @@ class RoadNode {
                  * @param argCrashProb A double storing the probability of getting in a crash on the RoadEdge
                 */
                 RoadEdge(std::size_t argId, std::size_t argStart, std::size_t argEnd, double argCrashProb, double argLength);
+
+                /**
+                * Default move-assignment operator for RoadNode
+                */
+                RoadEdge& operator=(RoadEdge&& rhs) = default;
+
+                /**
+                * Default copy-assignment operator for RoadNode
+                */
+                RoadEdge& operator=(const RoadEdge& rhs) = default;
+
+                /**
+                * @todo
+                */
+                RoadEdge(RoadEdge&& other) = default;
+
+                /**
+                * @todo
+                */
+                RoadEdge(const RoadEdge& other) = default;
         };
         /**
         * Internal representation of the RoadEdge's id, start, end, crash probability, length, number of crashes, and number of daily drivers
@@ -87,6 +107,11 @@ class RoadNode {
         std::pair<double, double> pos;
         std::vector<std::size_t> edges;
         std::string name;
+
+        /**
+        * Defaulted empty constructor for RoadNode
+        */
+        RoadNode() = default;
 
         /**
          * Constructor for RoadNode with a RoadNode id of "argId" and a position of "argPos"
@@ -104,4 +129,32 @@ class RoadNode {
          * @param argName A string that stores the name of the road that the RoadNode lies on
         */
         RoadNode(std::size_t argId, std::pair<double, double> argPos, std::string argName);
+
+        /**
+        * Default move-assignment operator for RoadNode
+        * 
+        * @param rhs RoadNode to be move-assigned from
+        */
+        RoadNode& operator=(RoadNode&& rhs) = default;
+
+        /**
+         * Default copy-assignment operator for RoadNode
+         * 
+         * @param rhs RoadNode to be copy-assigned from
+        */
+        RoadNode& operator=(const RoadNode& rhs) = default;
+
+        /**
+         * Default RoadNode copy-constructor
+         * 
+         * @param other RoadNode to be copy-constructed from
+        */
+        RoadNode(const RoadNode& other) = default;
+
+        /**
+         * Default RoadNode move-constructor
+         * 
+         * @param other RoadNode to be move-constructed from
+        */
+        RoadNode(RoadNode&& other) = default;
 };

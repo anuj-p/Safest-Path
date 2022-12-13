@@ -11,7 +11,7 @@
 class RoadGraph {
     public:
         /**
-         * Defaulted empty constuctor for RoadGraph
+         * Empty constuctor for RoadGraph
         */
         RoadGraph();
 
@@ -236,7 +236,7 @@ class RoadGraph {
         /**
          * Copy constructor
          * 
-         * @param other A RoadGraph to be copied
+         * @param other A RoadGraph to be copy-constructed
         */
         RoadGraph(const RoadGraph& other);
 
@@ -249,6 +249,21 @@ class RoadGraph {
          * For all RoadEdges with a zero driver count, replaces the driver count of the RoadEdge by the average driver counts of all incident edges of the start and end RoadNodes that have nonzero driver counts
         */
         void fillMissingTrafficData();
+
+        /**
+         * Move-assigns "rhs" into "*this" RoadGraph
+         * 
+         * @param rhs A RoadGraph to be move-assigned into "*this"
+         * @return A RoadGraph, "*this"
+        */
+        RoadGraph& operator=(RoadGraph&& rhs);
+
+        /**
+         * Move constructor
+         * 
+         * @param other A RoadGraph to be move-constructed
+        */
+        RoadGraph(RoadGraph&& other);
 
     private:
         /**

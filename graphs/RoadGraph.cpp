@@ -4,6 +4,7 @@
 #include <queue>
 #include <set>
 #include <cmath>
+#include <iostream>
 
 RoadGraph::RoadGraph() : nodes_(), edges_(), road_entries_vec_(), tree_(nullptr) {}
 
@@ -445,8 +446,7 @@ RoadGraph& RoadGraph::operator=(const RoadGraph& rhs) {
     return *this;
 }
 
-RoadGraph::RoadGraph(const RoadGraph& other) : nodes_(other.nodes_), edges_(other.edges_), road_entries_vec_(other.road_entries_vec_), tree_(nullptr) {
-    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+RoadGraph::RoadGraph(const RoadGraph& other) : nodes_(other.nodes_), edges_(other.edges_), road_entries_vec_(other.road_entries_vec_), tree_(new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10)) {
     tree_->index->buildIndex();
 }
 
@@ -457,4 +457,21 @@ void RoadGraph::buildTree() {
     }
     tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
     tree_->index->buildIndex();
+}
+
+RoadGraph& RoadGraph::operator=(RoadGraph&& rhs) {
+    if (this == &rhs) {
+        return *this;
+    }
+    nodes_ = std::move(rhs.nodes_);
+    edges_ = std::move(rhs.edges_);
+    delete tree_;
+    road_entries_vec_ = std::move(rhs.road_entries_vec_);
+    tree_ = new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10);
+    tree_->index->buildIndex();
+    return *this;
+}
+
+RoadGraph::RoadGraph(RoadGraph&& other) : nodes_(std::move(other.nodes_)), edges_(std::move(other.edges_)), road_entries_vec_(std::move(other.road_entries_vec_)), tree_(new KDTreeVectorOfVectorsAdaptor<std::vector<std::vector<double>>, double>(2, road_entries_vec_, 10)) {
+    tree_->index->buildIndex(); 
 }
