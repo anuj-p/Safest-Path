@@ -6,9 +6,6 @@
 #include "utils.h"
 
 #include <optional>
-#include <string>
-#include <list>
-#include <tuple>
 
 /**
  * Reader class
