@@ -1,7 +1,7 @@
 #pragma once
 
 // TODO
-// Query multiple parameters at once (alternative: just make start_idx a parameter and request in order) -> improve constant by ~3-4x
+// query multiple parameters at once (just make start_idx a parameter)
 
 #include "utils.h"
 
@@ -78,5 +78,5 @@ class Reader {
          * @param space A bool indicating if there is spacing in the dataset that needs to be adjusted for
          * @return An optional of list of pairs od doubles that stores the singed GPS coordinates of interest in format {longitude, latitude}
         */
-        static std::optional<std::list<std::pair<double, double>>> findCoordinatesList(const std::string& line, const std::string& parameter, const unsigned int& dim, bool space);
+        static std::optional<std::list<std::pair<double, double>>> findCoordinatesList(const std::string& line, const std::string& parameter, unsigned int dim, bool space);
 };

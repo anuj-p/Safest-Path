@@ -109,7 +109,7 @@ std::optional<double> Reader::findDouble(const std::string& line, const std::str
     return stod(result);
 }
 
-std::optional<std::list<std::pair<double, double>>> Reader::findCoordinatesList(const std::string& line, const std::string& parameter, const unsigned int& dim, bool space) {
+std::optional<std::list<std::pair<double, double>>> Reader::findCoordinatesList(const std::string& line, const std::string& parameter, unsigned int dim, bool space) {
     size_t start_idx = line.find(parameter);
     if (start_idx == std::string::npos) return std::nullopt;
     while (line.substr(start_idx + parameter.length(), 2) != "\":") {
