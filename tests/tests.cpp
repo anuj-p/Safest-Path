@@ -3,8 +3,6 @@
 #include "../graphs/RoadGraph.h"
 
 #include <iostream>
-#include <stdexcept>
-#include <list>
 
 void ImageTests() {
     std::cout << "-> [Test Image Initilization]" << std::endl;
