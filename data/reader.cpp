@@ -3,6 +3,7 @@
 #include <optional>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 
 std::list<ReaderUtils::RoadEntry> Reader::getRoadEntries(const std::string& filename) {
     std::list<ReaderUtils::RoadEntry> entries;
