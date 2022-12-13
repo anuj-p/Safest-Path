@@ -1,10 +1,9 @@
 #include "RoadGraph.h"
 
 #include <map>
+#include <unordered_map>
 #include <queue>
-#include <set>
-#include <cmath>
-#include <iostream>
+#include <unordered_set>
 
 RoadGraph::RoadGraph() : nodes_(), edges_(), road_entries_vec_(), tree_(nullptr) {}
 
@@ -154,8 +153,8 @@ std::vector<std::size_t> RoadGraph::BFSPath(std::size_t id1, std::size_t id2) co
         return {id1};
     }
     std::queue<std::size_t> q;
-    std::set<std::size_t> visited;
-    std::map<std::size_t, std::size_t> prev_map;
+    std::unordered_set<std::size_t> visited;
+    std::unordered_map<std::size_t, std::size_t> prev_map;
     bool isConnected = false;
     q.push(id1);
     visited.insert(id1);
