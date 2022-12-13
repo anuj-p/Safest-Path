@@ -156,14 +156,36 @@ int main(int argc, char *argv[]) {
     // std::cout << path_idx.size() << std::endl;
 
     std::list<std::pair<double, double>> path;
+    std::vector<std::string> directions;
     for (const std::size_t& idx : path_idx) {
         path.push_back(nodes[idx].pos);
+        if (directions.empty()) directions.push_back(nodes[idx].name);
+        else if (directions.back() != nodes[idx].name) {
+            directions.push_back(nodes[idx].name);
+        }
     }
 
     road_image.addBoldPath(path, {255, 0, 0}, -87.5046, -91.5066, 42.5083, 36.9783, 1000);
 
     std::cout << "Outputting image..." << std::endl;
     road_image.toPNG(inputLine);
+    
+    std::cout << "Would you like to view directions? Y/N" << std::endl;
+    std::getline(std::cin, inputLine);
+    std::stringstream(inputLine) >> inputChar;
+    inputChar = std::toupper(inputChar);
+    if (inputChar == 'Y') {
+        unsigned int i = 1;
+        for (const std::string& road : directions) {
+            std::cout << "[" << i << "/" << directions.size() << "] Official Road Name: ";
+            if (road.empty()) std::cout << "UNNAMED" << std::endl;
+            else std::cout << road << std::endl;
+            i++;
+        }
+    } else if (inputChar == 'N') {
+    } else {
+        throw std::invalid_argument("Invalid input.");
+    }
 
     // std::vector<std::vector<std::size_t>> bfs = graph.ComponentBFS(0);
     // std::queue<std::size_t> queue;
