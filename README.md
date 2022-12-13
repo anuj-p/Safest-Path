@@ -46,5 +46,7 @@ To run the test suite, you must place the Illinois datasets into the `data` fold
 	* RoadImage.cpp (exists as a wrapper on image.cpp and image.h for visualizing road networks)
 	* RoadImage.h (exists as a wrapper on image.cpp and image.h for visualizing road networks)
 
-## Authors and acknowledgment
+## Authors and Acknowledgments
 Akul Patel, Anuj Patel, David Yu, Ryan Hertzberg
+[Lode Vandevenne](https://github.com/lvandeve) (for lodepng)
+[Jose Luis Blanco-Claraco](https://github.com/jlblancoc) (for nanoflann)
