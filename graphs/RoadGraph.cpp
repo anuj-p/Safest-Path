@@ -17,8 +17,11 @@ RoadGraph::RoadGraph(const std::list<ReaderUtils::RoadEntry>& road_entries, cons
         for (const std::pair<double, double>& pair : entry.coordinates_list) {
             std::size_t cur = static_cast<std::size_t>(-1);
             if (nodes.find(pair) == nodes.end()) {
-                cur = insertNode(pair, entry.name);
-                std::transform(nodes_[cur].name.begin(), nodes_[cur].name.end(), nodes_[cur].name.begin(), ::toupper);
+                std::string name = entry.name;
+                name.erase(name.find_last_not_of(' ')+1);
+                name.erase(0, name.find_first_not_of(' '));
+                std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+                cur = insertNode(pair, name);
                 nodes.insert({pair, cur});
             } else {
                 cur = nodes[pair];
@@ -49,8 +52,11 @@ RoadGraph::RoadGraph(const std::list<ReaderUtils::RoadEntry>& road_entries, cons
                 cur = findNearestNeighbor(pair);
             }
             if (nodes_[cur].name == "") {
-                nodes_[cur].name = entry.road_name;
-                std::transform(nodes_[cur].name.begin(), nodes_[cur].name.end(), nodes_[cur].name.begin(), ::toupper);
+                std::string name = entry.road_name;
+                name.erase(name.find_last_not_of(' ')+1);
+                name.erase(0, name.find_first_not_of(' '));
+                std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+                nodes_[cur].name = name;
             }
             if (prev != static_cast<std::size_t>(-1)) {
                 for (const std::size_t& edge : nodes_[prev].edges) {
@@ -195,42 +201,6 @@ std::vector<std::size_t> RoadGraph::getNeighbors(std::size_t id) const {
         }
     }
     return to_return;
-}
-
-std::pair<std::vector<double>, std::vector<std::size_t>> RoadGraph::PrimMST(std::pair<double, double> p) const {
-    std::size_t start = findNearestNeighbor(p);
-    std::vector<double> dist(nodes_.size(), 2);
-    std::vector<std::size_t> prev(nodes_.size(), static_cast<std::size_t>(-1));
-    std::priority_queue<std::pair<double, size_t>> queue;
-    std::vector<bool> visited(nodes_.size(), false);
-
-    for (const RoadNode& node : nodes_) {
-        queue.push({-2.0, node.id});
-    }
-    dist[start] = 0;
-    queue.push({0, start});
-
-    while (!queue.empty()) {
-        std::size_t curr = queue.top().second;
-        queue.pop();
-        visited[curr] = true;
-        for (const std::size_t& edge : nodes_[curr].edges) {
-            std::size_t neighbor = curr == edges_[edge].end ? edges_[edge].start : edges_[edge].end;
-            if (!visited[neighbor]) {
-                if (1-(1-dist[curr])*(1-edges_[edge].crashProb) < dist[neighbor]) {
-                    dist[neighbor] = 1-(1-dist[curr])*(1-edges_[edge].crashProb);
-                    queue.push({-1*dist[neighbor], neighbor});
-                    prev[neighbor] = curr;
-                }
-            }
-        }
-    }
-    for (const RoadNode& node : nodes_) {
-        if (dist[node.id] > 1) {
-            dist[node.id] = 1;
-        }
-    }
-    return std::make_pair(dist, prev);
 }
 
 std::pair<std::vector<double>, std::vector<std::size_t>> RoadGraph::DijkstraTree(std::size_t start, std::size_t end) const {

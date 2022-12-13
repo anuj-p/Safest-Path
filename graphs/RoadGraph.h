@@ -99,8 +99,6 @@ class RoadGraph {
         */
         std::size_t recalculateProb(std::size_t id, double constantFactor, double lengthFactor, double driverFactor);
 
-        std::pair<std::vector<double>, std::vector<std::size_t>> PrimMST(std::pair<double, double> p) const;
-
         /**
          * Runs Dijkstra's algorithm to find the safest path between RoadNodes "nodes_[start]" and "nodes_[end]"
          * 
