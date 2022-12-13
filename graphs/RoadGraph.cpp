@@ -100,7 +100,7 @@ std::size_t RoadGraph::addCrash(std::pair<double, double> pos, double numCrashes
     numCrashes /= nodes_[id].edges.size();
     for (std::size_t edge : nodes_[id].edges) {
         edges_[edge].numCrashes += numCrashes;
-        recalculateProb(edge, 0.00000001, 0.00000001, 0);
+        recalculateProb(edge, 0, 0.00000000001, 0);
     }
     return id;
 }
@@ -135,7 +135,7 @@ std::size_t RoadGraph::recalculateProb(std::size_t id, double constantFactor, do
 
 void RoadGraph::recalculateProbAll() {
     for (std::size_t i = 0; i < edges_.size(); ++i) {
-        recalculateProb(i, 0.00000001, 0.00000001, 0);
+        recalculateProb(i, 0, 0.00000000001, 0);
     }
 }
 
